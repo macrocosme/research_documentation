@@ -17,16 +17,16 @@ def compute_mom(L):
         L.sort()
         return L[int(len(L) / 2)]
     S = []
-    lIndex = 0
+    l_index = 0
 
-    for lIndex in range(0, len(L) - 1, 5):
-        S.append(L[lIndex:lIndex + 5])
+    for l_index in range(0, len(L) - 1, 5):
+        S.append(L[l_index:l_index + 5])
 
-    S.append(L[lIndex:])
+    S.append(L[l_index:])
     Meds = []
 
-    for subList in S:
-        Meds.append(compute_mom(subList))
+    for sub_list in S:
+        Meds.append(compute_mom(sub_list))
 
     L2 = compute_mom(Meds)
     L1 = L3 = []

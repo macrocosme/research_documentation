@@ -89,18 +89,20 @@ def noise_transients_experiment(print_log=False):
             # MAX
             maximum = np.nanmax(downsampled_array)
 
-            # MOMz
-            mom = compute_mom(downsampled_array)
-            # mom = median = np.median(downsampled_array)
+            # MOM
+            # mom = compute_mom(downsampled_array)
+
+            # Try with pure median for now...
+            mom = np.median(downsampled_array)
 
             # MAD
             series_mad = downsampled_array - mom
             mad = np.median(series_mad)
 
-            if print_log:
-                print(downsampling, lens, maximum, mom, mad)
-
+            # SNR
             snr = (maximum - mom) / (mad * 1.48)
+
+            # Trigger?
             if snr >= 10:
                 key = len(downsampled_array)
                 if key not in lens:
@@ -109,6 +111,9 @@ def noise_transients_experiment(print_log=False):
                 init_dict_list(moms, key)[key].append(mom)
                 init_dict_list(mads, key)[key].append(mad)
                 init_dict_list(snrs, key)[key].append(snr)
+
+            if print_log:
+                print(downsampling, lens, maximum, mom, mad)
 
     return n_loops, n_samples, counter_start, counter_end, counter_step, seriess, lens, maxima, moms, mads, snrs
 
@@ -120,6 +125,7 @@ def figure_trigger_fraction_vs_N(n_loops, snrs, lens, figure_name='trigger_fract
         ax.scatter(key, len(snrs[key])/n_loops, color='black')
         ax.set_xlabel("N")
         ax.set_ylabel("Trigger fraction")
+        ax.set_xscale('log')
 
     plt.savefig(figure_name + extension)
 
@@ -127,4 +133,4 @@ def figure_trigger_fraction_vs_N(n_loops, snrs, lens, figure_name='trigger_fract
 if __name__ == "__main__":
     n_loops, n_samples, counter_start, counter_end, counter_step, \
     seriess, lens, maxima, moms, mads, snrs = noise_transients_experiment(False)
-    figure_trigger_fraction_vs_N(n_loops, snrs, lens)
+    figure_trigger_fraction_vs_N(n_loops, snrs, lens, "trigger_fraction_vs_N_pure_median")

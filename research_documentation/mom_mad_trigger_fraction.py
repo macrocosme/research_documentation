@@ -47,6 +47,9 @@ def compute_mom(L):
         return L2
 
 def downsample(array, downsampling):
+    if downsampling == 0:
+        return array
+
     series = []
     for i in range(0, len(array), downsampling):
         series.append(np.mean(array[i:i+downsampling]))
@@ -72,7 +75,7 @@ def noise_transients_experiment(print_log=False):
     n_loops = 10000
     n_samples = 2500
     counter_start = 250
-    counter_end = 0
+    counter_end = -25
     counter_step = -25
 
     if print_log:
@@ -88,6 +91,7 @@ def noise_transients_experiment(print_log=False):
 
             # MOMz
             mom = compute_mom(downsampled_array)
+            # mom = median = np.median(downsampled_array)
 
             # MAD
             series_mad = downsampled_array - mom

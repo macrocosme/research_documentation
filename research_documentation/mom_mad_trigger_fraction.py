@@ -81,16 +81,16 @@ def noise_transients_experiment(print_log=False):
         array = np.random.normal(0, 1, n_samples)
 
         for downsampling in range(counter_start, counter_end, counter_step):
-            series = downsample(array, downsampling)
+            downsampled_array = downsample(array, downsampling)
 
             # MAX
-            maximum = np.nanmax(series)
+            maximum = np.nanmax(downsampled_array)
 
             # MOMz
-            mom = compute_mom(series)
+            mom = compute_mom(downsampled_array)
 
             # MAD
-            series_mad = series - mom
+            series_mad = downsampled_array - mom
             mad = np.median(series_mad)
 
             if print_log:
@@ -98,7 +98,7 @@ def noise_transients_experiment(print_log=False):
 
             snr = (maximum - mom) / (mad * 1.48)
             if snr >= 10:
-                key = len(series)
+                key = len(downsampled_array)
                 if key not in lens:
                     lens.append(key)
                 init_dict_list(maxima, key)[key].append(maximum)

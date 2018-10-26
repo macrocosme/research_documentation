@@ -4,13 +4,13 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import rc
 
-# %matplotlib inline
-# %config InlineBackend.figure_format='retina'
-
 rc('font', size=12)
 rc('axes', titlesize=14)
 rc('axes', labelsize=14)
 
+def compute_mad(array, med):
+    series_mad = np.abs(array - med)
+    return np.median(series_mad)
 
 def compute_mom(L):
     if len(L) < 10:
@@ -56,82 +56,83 @@ def downsample(array, downsampling):
     return np.asarray(series)
 
 
-def init_dict_list(dictionary, key):
-    try:
-        dictionary[key]
-    except KeyError:
-        dictionary[key] = []
-    return dictionary
+def draw(n_samples=2500):
+    return np.random.normal(0, 1, n_samples)
 
 
-def noise_transients_experiment(print_log=False):
-    seriess = {}
-    lens = []
-    maxima = {}
-    moms = {}
-    mads = {}
-    snrs = {}
+def snr_median_mad(n_trials=1000, downsampling_levels=250, n_samples=2500):
+    SNRs = np.zeros([downsampling_levels, n_trials])
 
-    n_loops = 10000
-    n_samples = 2500
-    counter_start = 250
-    counter_end = -25
-    counter_step = -25
+    for trial in range(n_trials):
+        distribution = draw(n_samples)
+        for level in range(downsampling_levels):
+            distribution = downsample(distribution, level)
+            med = np.median(distribution)
+            SNRs[level, trial] = (np.max(distribution) - med) / (compute_mad(distribution, med) * 1.48)
+    return SNRs
 
-    if print_log:
-        print("downsampling", "len", "maximum", "mom", "mad")
-    for i in range(n_loops):
-        array = np.random.normal(0, 1, n_samples)
 
-        for downsampling in range(counter_start, counter_end, counter_step):
-            downsampled_array = downsample(array, downsampling)
+def snr_mom_mad(n_trials=1000, downsampling_levels=250, n_samples=2500):
+    SNRs = np.zeros([downsampling_levels, n_trials])
 
-            # MAX
-            maximum = np.nanmax(downsampled_array)
+    for trial in range(n_trials):
+        distribution = draw(n_samples)
+        for level in range(downsampling_levels):
+            distribution = downsample(distribution, level)
+            mom = compute_mom(distribution)
+            SNRs[level, trial] = (np.max(distribution) - mom) / (compute_mad(distribution, mom) * 1.48)
 
-            # MOM
-            # mom = compute_mom(downsampled_array)
+    return SNRs
 
-            # Try with pure median for now...
-            mom = np.median(downsampled_array)
 
-            # MAD
-            series_mad = np.abs(downsampled_array - mom)
-            mad = np.median(series_mad)
-
-            # SNR
-            if mad != 0:
-                snr = (maximum - mom) / (mad * 1.48)
-
-                # Trigger?
-                if snr >= 10:
-                    key = len(downsampled_array)
-                    if key not in lens:
-                        lens.append(key)
-                    init_dict_list(maxima, key)[key].append(maximum)
-                    init_dict_list(moms, key)[key].append(mom)
-                    init_dict_list(mads, key)[key].append(mad)
-                    init_dict_list(snrs, key)[key].append(snr)
-
-            if print_log:
-                print(downsampling, lens, maximum, mom, mad)
-
-    return n_loops, n_samples, counter_start, counter_end, counter_step, seriess, lens, maxima, moms, mads, snrs
-
-def figure_trigger_fraction_vs_N(n_loops, snrs, lens, figure_name='trigger_fraction_vs_N', extension='.pdf'):
+def plot_trigger_ratio(SNRs, threshold=10, figure_name="trigger_ratio_median"):
     fig, ax = plt.subplots()
 
-    ax.set_title("Gaussian noise data: Trigger fraction v number of samples")
-    for key in lens:
-        ax.scatter(key, len(snrs[key])/n_loops, color='black')
+    for level in range(SNRs.shape[0]):
+        if level != 0:
+            ax.scatter(n_samples / level,
+                       len(SNRs[level][np.where(SNRs[level] > threshold)]) / n_trials,
+                       color='black')
+        else:
+            ax.scatter(n_samples,
+                       len(SNRs[level][np.where(SNRs[level] > threshold)]) / n_trials,
+                       color='black')
+
         ax.set_xlabel("N")
-        ax.set_ylabel("Trigger fraction")
-        # ax.set_xscale('log')
+        ax.set_ylabel("Trigger fraction (SNR>" + str(threshold) + ")")
 
-    plt.savefig(figure_name + extension)
+        plt.savefig(figure_name + "_threshold_" + str(threshold) + ".pdf")
 
+
+def plot_max_snr_per_downsampling_level(SNRs, figure_name="max_snr_per_downsampling_median"):
+    fig, ax = plt.subplots()
+
+    for level in range(SNRs.shape[0]):
+        if level != 0:
+            ax.scatter(n_samples / level,
+                       np.max(SNRs[level]),
+                       color='black')
+        else:
+            ax.scatter(n_samples,
+                       np.max(SNRs[level]),
+                       color='black')
+
+        ax.set_xlabel("N")
+        ax.set_ylabel("Max(SNR)")
+
+    plt.savefig(figure_name + ".pdf")
 
 if __name__ == "__main__":
-    n_loops, n_samples, counter_start, counter_end, counter_step, \
-    seriess, lens, maxima, moms, mads, snrs = noise_transients_experiment(False)
-    figure_trigger_fraction_vs_N(n_loops, snrs, lens, "trigger_fraction_vs_N_pure_median")
+    n_trials = 1000
+    downsampling_levels = 250
+    n_samples = 2500
+
+    SNR_median = snr_median_mad(n_trials, downsampling_levels, n_samples)
+    SNR_mom = snr_mom_mad(n_trials, downsampling_levels, n_samples)
+
+    plot_trigger_ratio(SNR_median, 6)
+    plot_trigger_ratio(SNR_mom, 6, figure_name="trigger_ratio_median")
+
+    plot_max_snr_per_downsampling_level(SNR_median)
+    plot_max_snr_per_downsampling_level(SNR_mom, figure_name="max_snr_per_downsampling_mom")
+

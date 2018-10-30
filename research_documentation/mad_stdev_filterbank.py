@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib.pyplot import plot, legend, ylabel, xlabel, semilogx
-from .extern.arts_analysis import reader
+from arts_analysis import reader
 
 def read_fil_data(fn):
     x = reader.read_fil_data(fn, start=0, stop=250000)[0]

@@ -41,7 +41,8 @@ def main(**kwargs):
     import copy
 
     N = np.array([1, 5, 10, 50, 100, 250, 500, 1000, 2500])
-    data = reader.read_fil_data('/data2/output/20181020_2018-10-20-09:59:59.FRB171004_filterbank/CB17.fil', start=0, stop=250000)[0]
+    if not kwargs['gaussian_noise']:
+        data = reader.read_fil_data('/data2/output/20181020_2018-10-20-09:59:59.FRB171004_filterbank/CB17.fil', start=0, stop=250000)[0]
 
     S1, S2, S3, S4 = [],[],[],[]
 
@@ -54,9 +55,13 @@ def main(**kwargs):
 
     for ii in range(kwargs['N_DM']):
         print (ii)
-        xx = copy.deepcopy(data)
-        xx.dedisperse(ii)
-        xx = np.mean(xx.data, axis=0)
+
+        if not kwargs['gaussian_noise']:
+            xx = copy.deepcopy(data)
+            xx.dedisperse(ii)
+            xx = np.mean(xx.data, axis=0)
+        else:
+            xx = np.random.normal(0, 1, 25000)
 
         for nn in N:
             print ("\t%d" % nn)
@@ -129,6 +134,9 @@ def check_defaults(**kwargs):
     if kwargs['figure_filename'] == None:
         kwargs['figure_filename'] = 'filterbank_%d.png' % kwargs['N_DM']
 
+    if kwargs['gaussian_noise'] == None:
+        kwargs['gaussian_noise'] = False
+
     return kwargs
 
 
@@ -137,6 +145,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--pickle_filename', help="Pickle filename")
     parser.add_argument('--figure_filename', help="Figure filename", type=str)
+    parser.add_argument('--gaussian_noise', help="Use gaussian noise input (True/False)", type=bool)
     parser.add_argument('--N_DM', help="Number of DM trials", type=int)
     parser.add_argument('--xscale', help="Scaling for the x axis", type=str)
     parser.add_argument('--yscale', help="Scaling for the y axis", type=str)

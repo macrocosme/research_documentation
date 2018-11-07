@@ -1,8 +1,6 @@
 import numpy as np
 import argparse
-
 import cPickle as pickle
-import argparse
 
 def read_fil_data(fn):
     x = reader.read_fil_data(fn, start=0, stop=250000)[0]

@@ -121,6 +121,8 @@ def make_plot(S1, S2, S3, S4, N, **kwargs):
     plt.xlabel('N', fontsize=kwargs['fontsize'])
     if kwargs['input_type'] == 'time_chunks':
         plt.ylabel('S/N Max (%d samples, %d chunk size)' % (kwargs['n_samples'], kwargs['chunk_size']), fontsize=kwargs['fontsize'])
+    elif kwargs['input_type'] == 'filterbank':
+        plt.ylabel('S/N Max (%d DMs trials)' % (kwargs['n_samples']), fontsize=kwargs['fontsize'])
     else:
         plt.ylabel('S/N Max (%d samples)' % (kwargs['n_samples']), fontsize=kwargs['fontsize'])
 

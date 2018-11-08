@@ -127,6 +127,8 @@ def make_plot(S1, S2, S3, S4, N, **kwargs):
     plt.xscale = kwargs['xscale']
     plt.yscale = kwargs['yscale']
 
+    print kwargs['yscale']
+
     plt.tight_layout()
     plt.show()
     plt.savefig(kwargs['figure_filename'], dpi=300)

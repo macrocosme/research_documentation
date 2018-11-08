@@ -117,12 +117,12 @@ def make_plot(S1, S2, S3, S4, N, **kwargs):
     plt.plot(25000./N, S3)
     plt.plot(25000./N, S4)
 
-    plt.legend(['median, stdev','MoM, MAD','median, MAD', 'MoM, stdev'], font_size=kwargs['font_size'])
-    plt.xlabel('N', font_size=kwargs['font_size'])
+    plt.legend(['median, stdev','MoM, MAD','median, MAD', 'MoM, stdev'], fontsize=kwargs['fontsize'])
+    plt.xlabel('N', fontsize=kwargs['fontsize'])
     if kwargs['input_type'] is 'time_chunks':
-        plt.ylabel('S/N Max (%d samples, %d chunk size)' % (kwargs['n_samples'], kwargs['chunk_size']), font_size=kwargs['font_size'])
+        plt.ylabel('S/N Max (%d samples, %d chunk size)' % (kwargs['n_samples'], kwargs['chunk_size']), fontsize=kwargs['fontsize'])
     else:
-        plt.ylabel('S/N Max (%d samples)' % (kwargs['n_samples']), font_size=kwargs['font_size'])
+        plt.ylabel('S/N Max (%d samples)' % (kwargs['n_samples']), fontsize=kwargs['fontsize'])
 
     plt.xscale = kwargs['xscale']
     plt.yscale = kwargs['yscale']
@@ -138,8 +138,8 @@ def check_defaults(**kwargs):
     if kwargs['yscale'] == None:
         kwargs['yscale'] = 'linear'
 
-    if kwargs['font_size'] == None:
-        kwargs['font_size'] = 12
+    if kwargs['fontsize'] == None:
+        kwargs['fontsize'] = 12
 
     if kwargs['n_samples'] == None:
         kwargs['n_samples'] = 1000
@@ -151,6 +151,9 @@ def check_defaults(**kwargs):
 
     if kwargs['input_type'] in ('filterbank', 'time_chunks'):
         kwargs['gaussian_noise'] = False
+
+    if kwargs['make_figure_only'] == None:
+        kwargs['make_figure_only'] = False
 
     kwargs['filterbank_filename'] = '/data2/output/20181020_2018-10-20-09:59:59.FRB171004_filterbank/CB17.fil'
 
@@ -170,19 +173,25 @@ if __name__ == "__main__":
                              """,
                         type=str, choices=['filterbank', 'gaussian_noise', 'time_chunks'])
     parser.add_argument('--chunk_size', help="Chunk size (if input_type is 'time_chunks')", type=int)
-    parser.add_argument('--font_size', help="Figure's font size", type=int)
+    parser.add_argument('--fontsize', help="Figure's font size", type=int)
     parser.add_argument('--gaussian_noise', help="Use gaussian noise input (True/False)", type=bool)
     parser.add_argument('--n_samples', help="Number of trials (e.g. DMs, draws, chunks)", type=int)
     parser.add_argument('--xscale', help="Scaling for the x axis", type=str, choices=['linear', 'log'])
     parser.add_argument('--yscale', help="Scaling for the y axis", type=str, choices=['linear', 'log'])
+    parser.add_argument('--make_figure_only', help="Make figure only (True/False) from pickle file", type=bool)
+
     args = parser.parse_args()
 
     kwargs = check_defaults(**vars(args))
 
-    S1, S2, S3, S4, N = main(**kwargs)
+    if not kwargs['make_figure_only']:
+        S1, S2, S3, S4, N = main(**kwargs)
 
-    if args.pickle_filename:
-        with open(args.pickle_filename, 'wb') as f:
-            pickle.dump([S1, S2, S3, S4, N], f)
+        if args.pickle_filename:
+            with open(args.pickle_filename, 'wb') as f:
+                pickle.dump([S1, S2, S3, S4, N], f)
+    else:
+        with open(args.pickle_filename, 'rb') as f:
+            S1, S2, S3, S4, N = pickle.load(f)
 
     make_plot(S1, S2, S3, S4, N, **kwargs)

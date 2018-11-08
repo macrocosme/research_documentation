@@ -86,14 +86,14 @@ def main(**kwargs):
             if snr > SS2[nn]:
                 SS2[nn] = snr
 
-            print ("\t\tCompute mom/mad")
-            med = compute_mom(x)
+            print ("\t\tCompute median/mad")
+            med = np.median(x)
             snr = (x.max() - med)/(1.48*compute_mad(x, med))
             if snr > SS3[nn]:
                 SS3[nn] = snr
 
-            print ("\t\tCompute median/mad")
-            med = np.median(x)
+            print ("\t\tCompute mom/mad")
+            med = compute_mom(x)
             snr = (x.max() - med)/(1.48*compute_mad(x, med))
             if snr > SS4[nn]:
                 SS4[nn] = snr
@@ -117,7 +117,7 @@ def make_plot(S1, S2, S3, S4, N, **kwargs):
     plt.plot(25000./N, S3)
     plt.plot(25000./N, S4)
 
-    plt.legend(['median, stdev','MoM, stdev', 'MoM, MAD','median, MAD'], fontsize=kwargs['fontsize'])
+    plt.legend(['median, stdev','MoM, stdev', 'median, MAD', 'MoM, MAD'], fontsize=kwargs['fontsize'])
     plt.xlabel('N', fontsize=kwargs['fontsize'])
     if kwargs['input_type'] == 'time_chunks':
         plt.ylabel('S/N Max (%d samples, %d chunk size)' % (kwargs['n_samples'], kwargs['chunk_size']), fontsize=kwargs['fontsize'])

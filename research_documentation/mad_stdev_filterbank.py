@@ -135,7 +135,7 @@ def make_plot(S1, S2, S3, S4, N, **kwargs):
 
 def check_defaults(**kwargs):
     if kwargs['xscale'] == None:
-        kwargs['xscale'] = 'log'
+        kwargs['xscale'] = 'linear'
 
     if kwargs['yscale'] == None:
         kwargs['yscale'] = 'linear'

@@ -129,7 +129,7 @@ def make_plot(S1, S2, S3, S4, N, **kwargs):
 
     plt.tight_layout()
     plt.show()
-    plt.savefig(kwargs['figure_filename'])
+    plt.savefig(kwargs['figure_filename'], dpi=300)
 
 def check_defaults(**kwargs):
     if kwargs['xscale'] == None:

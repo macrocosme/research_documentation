@@ -148,6 +148,9 @@ def check_defaults(**kwargs):
     elif kwargs['input_type'] is 'time_chunks':
         kwargs['n_samples'] = 200
 
+    if kwargs['chunk_size'] == None:
+        kwargs['chunk_size'] = 25000
+
     if kwargs['figure_filename'] == None:
         kwargs['figure_filename'] = 'filterbank_%d.png' % kwargs['n_samples']
 

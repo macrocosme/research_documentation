@@ -179,7 +179,6 @@ if __name__ == "__main__":
                         type=str, choices=['filterbank', 'gaussian_noise', 'time_chunks'])
     parser.add_argument('--chunk_size', help="Chunk size (if input_type is 'time_chunks')", type=int)
     parser.add_argument('--fontsize', help="Figure's font size", type=int)
-    parser.add_argument('--gaussian_noise', help="Use gaussian noise input (True/False)", type=bool)
     parser.add_argument('--n_samples', help="Number of trials (e.g. DMs, draws, chunks)", type=int)
     parser.add_argument('--xscale', help="Scaling for the x axis", type=str, choices=['linear', 'log'])
     parser.add_argument('--yscale', help="Scaling for the y axis", type=str, choices=['linear', 'log'])

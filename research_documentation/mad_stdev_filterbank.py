@@ -126,8 +126,8 @@ def make_plot(S1, S2, S3, S4, N, **kwargs):
     else:
         plt.ylabel('S/N Max (%d samples)' % (kwargs['n_samples']), fontsize=kwargs['fontsize'])
 
-    plt.xscale = kwargs['xscale']
-    plt.yscale = kwargs['yscale']
+    plt.xscale(kwargs['xscale'])
+    plt.yscale(kwargs['yscale'])
 
     plt.tight_layout()
     plt.show()

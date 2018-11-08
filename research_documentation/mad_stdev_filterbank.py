@@ -117,7 +117,7 @@ def make_plot(S1, S2, S3, S4, N, **kwargs):
     plt.plot(25000./N, S3)
     plt.plot(25000./N, S4)
 
-    plt.legend(['median, stdev','MoM, MAD','median, MAD', 'MoM, stdev'], fontsize=kwargs['fontsize'])
+    plt.legend(['median, stdev','MoM, stdev', 'MoM, MAD','median, MAD'], fontsize=kwargs['fontsize'])
     plt.xlabel('N', fontsize=kwargs['fontsize'])
     if kwargs['input_type'] == 'time_chunks':
         plt.ylabel('S/N Max (%d samples, %d chunk size)' % (kwargs['n_samples'], kwargs['chunk_size']), fontsize=kwargs['fontsize'])

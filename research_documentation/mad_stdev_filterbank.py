@@ -82,7 +82,8 @@ def main(**kwargs):
                 SS1[nn] = snr
 
             print ("\t\tCompute mom/stdev")
-            snr = (x.max() - compute_mom(x))/(np.std(x))
+            mom = compute_mom(x)
+            snr = (x.max() - mom)/(np.std(x))
             if snr > SS2[nn]:
                 SS2[nn] = snr
 
@@ -93,8 +94,7 @@ def main(**kwargs):
                 SS3[nn] = snr
 
             print ("\t\tCompute mom/mad")
-            med = compute_mom(x)
-            snr = (x.max() - med)/(1.48*compute_mad(x, med))
+            snr = (x.max() - mom)/(1.48*compute_mad(x, mom))
             if snr > SS4[nn]:
                 SS4[nn] = snr
 

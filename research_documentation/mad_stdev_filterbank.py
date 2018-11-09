@@ -67,6 +67,7 @@ def main(**kwargs):
             xx = np.random.normal(0, 1, 25000)
         elif kwargs['input_type'] == 'time_chunks':
             xx = reader.read_fil_data(kwargs['filterbank_filename'], start=index_start, stop=index_start+kwargs['chunk_size'])[0]
+            xx.dedisperse(59)
             xx = np.mean(xx.data, axis=0)
             index_start += kwargs['chunk_size']
 
@@ -160,7 +161,9 @@ def check_defaults(**kwargs):
     if kwargs['make_figure_only'] == None:
         kwargs['make_figure_only'] = False
 
-    kwargs['filterbank_filename'] = '/data2/output/20181020_2018-10-20-09:59:59.FRB171004_filterbank/CB17.fil'
+    if kwargs['filterbank_filename'] == None:
+        #kwargs['filterbank_filename'] = '/data2/output/20181020_2018-10-20-09:59:59.FRB171004_filterbank/CB17.fil'
+        kwargs['filterbank_filename'] = '/home/arts/vohl/data/input/20181011/dm0.0_nfrb100_204_sec_20181011-0847.fil'
 
     return kwargs
 
@@ -183,6 +186,7 @@ if __name__ == "__main__":
     parser.add_argument('--xscale', help="Scaling for the x axis", type=str, choices=['linear', 'log'])
     parser.add_argument('--yscale', help="Scaling for the y axis", type=str, choices=['linear', 'log'])
     parser.add_argument('--make_figure_only', help="Make figure only (True/False) from pickle file", type=bool)
+    parser.add_argument('--filterbank_filename', help='Filterbank filename (and path if file not in current repository)', type=str)
 
     args = parser.parse_args()
 

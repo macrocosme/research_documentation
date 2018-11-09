@@ -67,7 +67,7 @@ def main(**kwargs):
             xx = np.random.normal(0, 1, 25000)
         elif kwargs['input_type'] == 'time_chunks':
             xx = reader.read_fil_data(kwargs['filterbank_filename'], start=index_start, stop=index_start+kwargs['chunk_size'])[0]
-            xx.dedisperse(59)
+            xx.dedisperse(40)
             xx = np.mean(xx.data, axis=0)
             index_start += kwargs['chunk_size']
 

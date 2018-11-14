@@ -1,14 +1,35 @@
-#!/bin/python3
 import numpy as np
+import argparse
+import cPickle as pickle
 
-from tqdm import tqdm as progressbar
-
-from matplotlib import pyplot as plt
-from matplotlib import rc
-
-rc('font', size=12)
-rc('axes', titlesize=14)
-rc('axes', labelsize=14)
+# Ripped from presto's filterbank.py
+# (https://github.com/scottransom/presto/blob/master/lib/python/filterbank.py)
+def read_header(filename, verbose=False):
+    """Read the header of a filterbank file, and return
+        a dictionary of header paramters and the header's
+        size in bytes.
+        Inputs:
+            filename: Name of the filterbank file.
+            verbose: If True, be verbose. (Default: be quiet)
+        Outputs:
+            header: A dictionary of header paramters.
+            header_size: The size of the header in bytes.
+    """
+    header = {}
+    filfile = open(filename, 'rb')
+    filfile.seek(0)
+    paramname = ""
+    while (paramname != 'HEADER_END'):
+        if verbose:
+            print "File location: %d" % filfile.tell()
+        paramname, val = sigproc.read_hdr_val(filfile, stdout=verbose)
+        if verbose:
+            print "Read param %s (value: %s)" % (paramname, val)
+        if paramname not in ["HEADER_START", "HEADER_END"]:
+            header[paramname] = val
+    header_size = filfile.tell()
+    filfile.close()
+    return header, header_size
 
 def compute_mad(array, med):
     series_mad = np.abs(array - med)
@@ -17,245 +38,177 @@ def compute_mad(array, med):
 def compute_mom(L):
     if len(L) < 10:
         L.sort()
-        return L[int(len(L) / 2)]
+        return np.median(L)
     S = []
     l_index = 0
-
     for l_index in range(0, len(L) - 1, 5):
         S.append(L[l_index:l_index + 5])
-
     S.append(L[l_index:])
     Meds = []
-
     for sub_list in S:
         Meds.append(compute_mom(sub_list))
-
     L2 = compute_mom(Meds)
     L1 = L3 = []
-
     for i in L:
         if i < L2:
             L1.append(i)
         if i > L2:
             L3.append(i)
-
     if len(L) < len(L1):
         return compute_mom(L1)
-
     elif len(L) > len(L1) + 1:
         return compute_mom(L3)
-
     else:
         return L2
 
-def downsample(array, downsampling):
-    if downsampling == 0:
-        return array
+def main(**kwargs):
+    from arts_analysis import reader
+    import copy
 
-    series = []
-    for i in range(0, len(array), downsampling):
-        series.append(np.mean(array[i:i+downsampling]))
-    return np.asarray(series)
+    N = np.array([1, 5, 10, 50, 100, 250, 500, 1000, 2500])
+    if kwargs['input_type'] is 'filterbank':
+        data = reader.read_fil_data('/data2/output/20181020_2018-10-20-09:59:59.FRB171004_filterbank/CB17.fil', start=0, stop=250000)[0]
+    if kwargs['input_type'] is 'time_chunks':
+        chunk_size = 25000
+        index_start = 0
+
+        #chunk_size
+
+    S1, S2, S3, S4 = [],[],[],[]
+
+    SS1, SS2, SS3, SS4 = {},{},{},{}
+
+    # Initialise dicts
+    for ss in [SS1, SS2, SS3, SS4]:
+        for nn in N:
+            ss[nn] = -999999
+
+    for ii in range(kwargs['N_SAMPLES']):
+        print (ii)
+
+        if kwargs['input_type'] is 'filterbank':
+            xx = copy.deepcopy(data)
+            xx.dedisperse(ii)
+            xx = np.mean(xx.data, axis=0)
+        elif kwargs['input_type'] is 'gaussian_noise':
+            xx = np.random.normal(0, 1, 25000)
+        elif kwargs['input_type'] is 'time_chunks':
+            xx = reader.read_fil_data('/data2/output/20181020_2018-10-20-09:59:59.FRB171004_filterbank/CB17.fil', start=index_start, stop=index_start+args['chunk_size'])[0]
+            index_start += args['chunk_size']
+
+        for nn in N:
+            print ("\t%d" % nn)
+
+            k = len(xx)
+            x = xx[:k//nn*nn].reshape(-1, nn).mean(-1)
+
+            print ("\t\tCompute median/stdev")
+            snr = (x.max() - np.median(x))/(np.std(x))
+            if snr > SS1[nn]:
+                SS1[nn] = snr
+
+            print ("\t\tCompute mom/stdev")
+            snr = (x.max() - compute_mom(x))/(np.std(x))
+            if snr > SS2[nn]:
+                SS2[nn] = snr
+
+            print ("\t\tCompute mom/mad")
+            med = compute_mom(x)
+            snr = (x.max() - med)/(1.48*compute_mad(x, med))
+            if snr > SS3[nn]:
+                SS3[nn] = snr
+
+            print ("\t\tCompute median/mad")
+            med = np.median(x)
+            snr = (x.max() - med)/(1.48*compute_mad(x, med))
+            if snr > SS4[nn]:
+                SS4[nn] = snr
 
 
-def draw(n_samples=2500):
-    return np.random.normal(0, 1, n_samples)
 
+            print ("")
 
-def snr_median_mad(n_trials=1000, downsampling_levels=250, n_samples=2500):
-    SNRs = np.zeros([downsampling_levels, n_trials])
+    print ("printing order of append")
+    for nn in N:
+        print (nn)
+        S1.append(SS1[nn])
+        S2.append(SS2[nn])
+        S3.append(SS3[nn])
+        S4.append(SS4[nn])
 
-    print ("Computing SNR [median and mad] - %s trials" % n_trials)
-    for trial in progressbar(range(n_trials), ascii=True):
-        distribution = draw(n_samples)
-        for level in range(downsampling_levels):
-            distribution = downsample(distribution, level)
-            med = np.median(distribution)
-            mad = compute_mad(distribution, med)
-            if mad != 0:
-                SNRs[level, trial] = (np.max(distribution) - med) / (mad * 1.48)
-            else:
-                SNRs[level, trial] = 0
-    return SNRs
+    return S1, S2, S3, S4, N
 
+def make_plot(S1, S2, S3, S4, N, **kwargs):
+    from matplotlib import pyplot as plt
+    plt.plot(25000./N, S1)
+    plt.plot(25000./N, S2)
+    plt.plot(25000./N, S3)
+    plt.plot(25000./N, S4)
 
-def snr_mom_mad(n_trials=1000, downsampling_levels=250, n_samples=2500):
-    SNRs = np.zeros([downsampling_levels, n_trials])
+    plt.legend(['median, stdev','MoM, MAD','median, MAD', 'MoM, stdev'], fontsize=kwargs['fontsize'])
+    plt.ylabel('S/N Max (1000 DMs)', fontsize=kwargs['fontsize'])
+    plt.xlabel('N', fontsize=kwargs['fontsize'])
 
-    print("Computing SNR [mom and mad] - %s trials" % n_trials)
-    for trial in progressbar(range(n_trials), ascii=True):
-        distribution = draw(n_samples)
-        for level in range(downsampling_levels):
-            distribution = downsample(distribution, level)
-            mom = compute_mom(distribution)
-            mad = compute_mad(distribution, mom)
+    plt.xscale = kwargs['xscale']
+    plt.yscale = kwargs['yscale']
 
-            if mad != 0:
-                SNRs[level, trial] = (np.max(distribution) - mom) / (mad * 1.48)
-            else:
-                SNRs[level, trial] = 0
-    return SNRs
-
-
-def plot_trigger_ratio_atomic(SNRs, threshold=10, n_trials=1000, n_samples=2500, mode='median',
-                              figure_name="trigger_ratio"):
-    fig, ax = plt.subplots()
-
-    for level in range(SNRs.shape[0]):
-        if level != 0:
-            ax.scatter(n_samples / level,
-                       len(SNRs[level][np.where(SNRs[level] > threshold)]) / n_trials,
-                       color='black')
-        else:
-            ax.scatter(n_samples,
-                       len(SNRs[level][np.where(SNRs[level] > threshold)]) / n_trials,
-                       color='black')
-
-        ax.set_xlabel("N")
-        ax.set_ylabel("Trigger fraction (SNR>" + str(threshold) + ")")
-
-    filename = "%s_%s_threshold_%s.pdf" % (figure_name, mode, threshold)
-    print("Saving file %s" % filename)
     plt.tight_layout()
-    plt.savefig(filename)
+    plt.show()
+    plt.savefig(kwargs['figure_filename'])
 
+def check_defaults(**kwargs):
+    if kwargs['xscale'] == None:
+        kwargs['xscale'] = 'log'
 
-def plot_trigger_ratio(SNRs_median, SNRs_mom, threshold=10, n_trials=1000, n_samples=2500, figure_name="trigger_ratio"):
-    fig, ax = plt.subplots()
+    if kwargs['yscale'] == None:
+        kwargs['yscale'] = 'linear'
 
-    labels = ['median+mad', 'mom+mad']
-    colors = ['black', 'blue']
-    marker = ['+', 'o']
+    if kwargs['fontsize'] == None:
+        kwargs['fontsize'] = 12
 
-    i = 0
-    for SNRs in [SNRs_median, SNRs_mom]:
-        first = True
-        for level in range(SNRs.shape[0]):
-            if level != 0:
-                if first:
-                    ax.scatter(n_samples / level,
-                               len(SNRs[level][np.where(SNRs[level] > threshold)]) / n_trials,
-                               marker=marker[i],
-                               color=colors[i],
-                               label=labels[i],
-                               )
-                else:
-                    ax.scatter(n_samples / level,
-                               len(SNRs[level][np.where(SNRs[level] > threshold)]) / n_trials,
-                               marker=marker[i],
-                               color=colors[i],
-                               )
-            else:
-                if first:
-                    ax.scatter(n_samples,
-                               len(SNRs[level][np.where(SNRs[level] > threshold)]) / n_trials,
-                               marker=marker[i],
-                               color=colors[i],
-                               label=labels[i],
-                               )
-                else:
-                    ax.scatter(n_samples,
-                               len(SNRs[level][np.where(SNRs[level] > threshold)]) / n_trials,
-                               marker=marker[i],
-                               color=colors[i],
-                               )
-            ax.set_xlabel("N")
-            ax.set_ylabel("Trigger fraction (SNR>" + str(threshold) + ")")
-            first = False
-        i += 1
+    if kwargs['N_SAMPLES'] == None:
+        kwargs['N_SAMPLES'] = 1000
 
-    ax.legend()
-    filename = "%s_threshold_%s.pdf" % (figure_name, threshold)
-    print("Saving file %s" % filename)
-    plt.tight_layout()
-    plt.savefig(filename)
+    if kwargs['filerbank_header']:
+        kwargs['filerbank_header'] = read_header
 
+    if kwargs['figure_filename'] == None:
+        kwargs['figure_filename'] = 'filterbank_%d.png' % kwargs['N_SAMPLES']
 
-def plot_max_snr_per_downsampling_level_atomic(SNRs, n_samples=2500, mode='median',
-                                               figure_name="max_snr_per_downsampling"):
-    fig, ax = plt.subplots()
+    if kwargs['input_type'] in ('filterbank', 'time_chunks'):
+        kwargs['gaussian_noise'] = False
 
-    for level in range(SNRs.shape[0]):
-        if level != 0:
-            ax.scatter(n_samples / level,
-                       np.max(SNRs[level]),
-                       color='black')
-        else:
-            ax.scatter(n_samples,
-                       np.max(SNRs[level]),
-                       color='black')
+    return kwargs
 
-        ax.set_xlabel("N")
-        ax.set_ylabel("Max(SNR)")
-
-    filename = "%s_%s.pdf" % (figure_name, mode)
-    print("Saving file %s" % filename)
-    plt.tight_layout()
-    plt.savefig(filename)
-
-
-def plot_max_snr_per_downsampling_level(SNRs_median, SNRs_mom, n_samples=2500, figure_name="max_snr_per_downsampling"):
-    fig, ax = plt.subplots()
-
-    labels = ['median+mad', 'mom+mad']
-    colors = ['black', 'blue']
-    marker = ['+', 'o']
-
-    i = 0
-    for SNRs in [SNRs_median, SNRs_mom]:
-        first = True
-        for level in range(SNRs.shape[0]):
-            if level != 0:
-                if first:
-                    ax.scatter(n_samples / level,
-                               np.max(SNRs[level]),
-                               marker=marker[i],
-                               color=colors[i],
-                               label=labels[i],
-                               )
-                else:
-                    ax.scatter(n_samples / level,
-                               np.max(SNRs[level]),
-                               marker=marker[i],
-                               color=colors[i],
-                               )
-            else:
-                if first:
-                    ax.scatter(n_samples,
-                               np.max(SNRs[level]),
-                               marker=marker[i],
-                               color=colors[i],
-                               label=labels[i],
-                               )
-                else:
-                    ax.scatter(n_samples,
-                               np.max(SNRs[level]),
-                               marker=marker[i],
-                               color=colors[i],
-                               )
-            first = False
-            ax.set_xlabel("N")
-            ax.set_ylabel("Max(SNR)")
-        i += 1
-
-    ax.legend()
-    filename = "%s.pdf" % (figure_name)
-    print("Saving file %s" % filename)
-    plt.tight_layout()
-    plt.savefig(filename)
-
-
-def main():
-    n_trials = 1000
-    downsampling_levels = 250
-    n_samples = 2500
-
-    SNR_median = snr_median_mad(n_trials, downsampling_levels, n_samples)
-    SNR_mom = snr_mom_mad(n_trials, downsampling_levels, n_samples)
-
-    plot_trigger_ratio(SNR_median, SNR_mom, 6)
-    plot_max_snr_per_downsampling_level(SNR_median, SNR_mom)
 
 if __name__ == "__main__":
-    main()
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--pickle_filename', help="Pickle filename")
+    parser.add_argument('--figure_filename', help="Figure filename", type=int)
+    parser.add_argument('--input_type',
+                        help="""Input type
+
+                                Options:
+                                    'filterbank': Filterbank file (.fil)
+                                    'gaussian_noise': Stochastic gaussian draw
+                                    'time_chunks': Discrete time chunks of size [index_start, index_start+chunk_size]
+                             """,
+                        type=str, choices=['filterbank', 'gaussian_noise', 'time_chunks'])
+    parser.add_argument('--chunk_size', help="Chunk size (if input_type is 'time_chunks')", type=int)
+    parser.add_argument('--fontsize', help="Figure's font size", type=str)
+    parser.add_argument('--gaussian_noise', help="Use gaussian noise input (True/False)", type=bool)
+    parser.add_argument('--N_SAMPLES', help="Number of trials (e.g. DMs, draws, chunks)", type=int)
+    parser.add_argument('--xscale', help="Scaling for the x axis", type=str)
+    parser.add_argument('--yscale', help="Scaling for the y axis", type=str)
+    args = parser.parse_args()
+
+    kwargs = check_defaults(**vars(args))
+
+    S1, S2, S3, S4, N = main(**kwargs)
+
+    if args.pickle_filename:
+        with open(args.pickle_filename, 'wb') as f:
+            pickle.dump([S1, S2, S3, S4, N], f)
+
+    make_plot(S1, S2, S3, S4, N, **kwargs)

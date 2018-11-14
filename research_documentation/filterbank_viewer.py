@@ -17,9 +17,9 @@ import numpy as np
 from vispy import app, scene, gloo, visuals
 from vispy.util.filter import gaussian_filter
 
-from ..arts_analysis import reader
+from arts_analysis import reader
 try:
-	from ..presto_python import filterbank
+	from presto_python import filterbank
 except:
     pass
 

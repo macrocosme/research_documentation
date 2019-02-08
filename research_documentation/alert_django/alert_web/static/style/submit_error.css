@@ -1,7 +1,0 @@
-.alert.error {
-    display: none;
-}
-
-.alert.error.visible {
-    display: block;
-}

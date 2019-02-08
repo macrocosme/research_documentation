@@ -1,0 +1,28 @@
+.helpModal ul {
+    list-style: none;
+}
+
+.helpModal ul li {
+    margin-bottom: 20px;
+}
+
+.helpModal ul li img {
+    height: 15px;
+    width: 15px;
+}
+
+.helpModal ul li .tool-header {
+    font-weight: 700;
+    color: brown;
+}
+
+.helpModal ul li .tool-description {
+    padding: 10px 0 0 30px;
+    font-size: small;
+}
+
+.helpModal ul li .tool-description .highlight {
+    font-weight: 500;
+    font-style: italic;
+    color: darkgreen;
+}

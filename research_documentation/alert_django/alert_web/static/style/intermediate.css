@@ -1,0 +1,34 @@
+.new-survey-notification {
+    padding: 30px;
+    margin: 5px;
+}
+
+.new-survey-notification ul {
+    margin-top: 30px;
+    list-style: none;
+}
+
+.new-survey-notification ul li{
+    margin-top: 30px;
+    text-align: center;
+}
+
+.notification-wrapper {
+    background-color: #eeeeee;
+    border: 1px solid #777777;
+    border-radius: 5px;
+    padding: 20px;
+}
+
+.notification-header {
+    border-bottom: 1px solid #000000;
+    padding-bottom: 10px;
+    font-weight: 700;
+    color: darkred;
+    text-align: center;
+}
+
+.notification-body {
+    text-align: justify;
+    padding: 10px 0;
+}

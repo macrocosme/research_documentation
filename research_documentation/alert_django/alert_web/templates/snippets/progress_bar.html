@@ -1,0 +1,11 @@
+<div class="container-fluid progress-container">
+    <h4>Current Survey Progress</h4>
+    <div class="progress">
+        <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: {{ progress }}%">
+            {{ labelled }} labelled
+        </div>
+        <div class="progress-bar progress-bar-warning" style="width: {{ remaining }}%">
+            {{ total }} remaining
+        </div>
+    </div>
+</div>

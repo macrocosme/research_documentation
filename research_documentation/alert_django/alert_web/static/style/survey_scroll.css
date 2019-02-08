@@ -1,0 +1,108 @@
+
+/*!*This is our main wrapping element, it's made 100vh high to ensure it is always the correct size and then moved into place and padded with negative margin and padding*!*/
+/*.scrollable-container {*/
+    /*display: flex;*/
+    /*overflow: hidden;*/
+    /*height: 100vh;*/
+    /*position: relative;*/
+    /*width: 100%;*/
+    /*backface-visibility: hidden;*/
+    /*will-change: overflow;*/
+/*}*/
+/*!*All the scrollable sections should overflow and be whatever height they need to be. As they are flex-items (due to being inside a flex container) they could be made to stretch full height at all times if needed.*/
+/*WebKit inertia scrolling is being added here for any present/future devices that are able to make use of it.*/
+/**!*/
+/*.left,*/
+/*.right {*/
+    /*overflow: auto;*/
+    /*height: auto;*/
+    /*padding: .5rem;*/
+    /*-webkit-overflow-scrolling: touch;*/
+    /*-ms-overflow-style: none;*/
+/*}*/
+/*!*Entirely optional – just wanted to remove the scrollbar on WebKit browsers as I find them ugly*!*/
+/*.left::-webkit-scrollbar,*/
+/*.right::-webkit-scrollbar {*/
+    /*display: none;*/
+/*}*/
+/*!*  Left and Right are set sizes while the Middle is set to flex one so it occupies all remaining space. This could be set as a width too if prefereable, perhaps using calc.*!*/
+/*.left {*/
+    /*flex: 1;*/
+    /*min-height: 500px;*/
+/*}*/
+
+/*.right {*/
+    /*width: 23%;*/
+    /*background-color: violet;*/
+/*}*/
+
+
+
+
+/**************************************************/
+/*             second one                         */
+
+
+/*.flexbox-parent {*/
+  /*!*width: 100%;*!*/
+  /*height: 100%;*/
+  /*display: flex;*/
+  /*flex-direction: column;*/
+  /*justify-content: flex-start;*/
+  /*!* align items in Main Axis *!*/
+  /*align-items: stretch;*/
+  /*!* align items in Cross Axis *!*/
+  /*align-content: stretch;*/
+  /*!* Extra space in Cross Axis *!*/
+  /*background: rgba(255, 255, 255, .1);*/
+/*}*/
+
+.flexbox-item {
+  padding: 5px;
+}
+
+.flexbox-item-grow {
+  flex: 1;
+  /* same as flex: 1 1 auto; */
+}
+
+.fill-area {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  /* align items in Main Axis */
+  align-items: stretch;
+  /* align items in Cross Axis */
+  align-content: stretch;
+  /* Extra space in Cross Axis */
+}
+
+.fill-area-content {
+  background: rgba(55, 155, 225, .1);
+  padding: 5px;
+  /* Needed for when the area gets squished too far and there is content that can't be displayed */
+  overflow: hidden;
+}
+.panel-body {
+  /* height: 480px; */
+  /*height: calc(100vh - 200px);*/
+  overflow-y: auto;
+}
+/*.header-page,*/
+/*.footer-page {*/
+  /*background-color: rgba(0,0,0,.75);*/
+  /*color: #fff;*/
+  /*text-align: center;*/
+  /*font-weight: 400;*/
+  /*height: 48px;*/
+/*}*/
+/*.header-page h1 {*/
+  /*font-size: 2em;*/
+  /*line-height: 1.5;*/
+  /*margin: 0;*/
+/*}*/
+/*.footer-page small {*/
+  /*display: inline-block;*/
+  /*font-size: 1.25em;*/
+  /*margin: .25em auto;*/
+/*}*/

@@ -1,14 +1,14 @@
 import numpy as np
 import glob
 import scipy.signal
-import optparse 
+import optparse
 # should there maybe be a clustering class
 # and a S/N calculation class?
 
 class AnalyseTriggers:
 
     def __init__(self):
-        pass 
+        pass
 
 def combine_all_beams(fdir, fnout=None):
 
@@ -46,8 +46,8 @@ def get_multibeam_triggers(times, beamno, t_window=0.5):
     for CB in CB_list:
         if CB==13:
             continue
-        vals, time_bins = np.histogram(times[beamno==CB], 
-                                       range=(times.min()-1, times.max()+1), 
+        vals, time_bins = np.histogram(times[beamno==CB],
+                                       range=(times.min()-1, times.max()+1),
                                        bins=nbins)
         vals[vals!=0] = 1.0
         ntrig_perbeam += vals
@@ -55,9 +55,9 @@ def get_multibeam_triggers(times, beamno, t_window=0.5):
     return ntrig_perbeam
 
 def group_dm_time_beam(fdir, fnout=None, trigname='cand'):
-    """ Go through all compound beams (CB) in 
-    directory fdir, group in time/DM, then 
-    group in time/CB. 
+    """ Go through all compound beams (CB) in
+    directory fdir, group in time/DM, then
+    group in time/CB.
     """
 
     flist = glob.glob(fdir+'/CB*%s' % trigname)
@@ -72,9 +72,9 @@ def group_dm_time_beam(fdir, fnout=None, trigname='cand'):
 
         try:
             sig_cut, dm_cut, tt_cut, ds_cut, ind_full = \
-                         get_triggers(fn, sig_thresh=8.0, 
-                         dm_min=10.0, dm_max=np.inf, 
-                         t_window=0.5, 
+                         get_triggers(fn, sig_thresh=8.0,
+                         dm_min=10.0, dm_max=np.inf,
+                         t_window=0.5,
                          max_rows=None)
         except IndexError:
             print("Skipping CB%d" % CB)
@@ -95,22 +95,22 @@ def group_dm_time_beam(fdir, fnout=None, trigname='cand'):
     return times_full, beamno_full, dm_full, ntrig_pb
 
 def dm_range(dm_max, dm_min=5., frac=0.2):
-    """ Generate list of DM-windows in which 
-    to search for single pulse groups. 
+    """ Generate list of DM-windows in which
+    to search for single pulse groups.
 
     Parameters
     ----------
-    dm_max : float 
-        max DM 
-    dm_min : float  
-        min DM 
-    frac : float 
-        fractional size of each window 
+    dm_max : float
+        max DM
+    dm_min : float
+        min DM
+    frac : float
+        fractional size of each window
 
     Returns
     -------
-    dm_list : list 
-        list of tuples containing (min, max) of each 
+    dm_list : list
+        list of tuples containing (min, max) of each
         DM window
     """
 
@@ -121,7 +121,7 @@ def dm_range(dm_max, dm_min=5., frac=0.2):
         if dm_max < 100.:
             prefac = (1-2*frac)/(1+2*frac)
         if dm_max < 50.:
-            prefac = 0.0 
+            prefac = 0.0
 
         dm_list.append((int(prefac*dm_max), int(dm_max)))
         dm_max = int(prefac*dm_max)
@@ -129,15 +129,15 @@ def dm_range(dm_max, dm_min=5., frac=0.2):
     return dm_list
 
 def read_singlepulse(fn, max_rows=None):
-    """ Read in text file containing single-pulse 
+    """ Read in text file containing single-pulse
     candidates. Allowed formats are:
     .singlepulse = PRESTO output
     .txt = injection pipeline output
-    .trigger = AMBER output 
-    .cand = heimdall output 
+    .trigger = AMBER output
+    .cand = heimdall output
 
-    max_rows sets the maximum number of 
-    rows to read from textfile 
+    max_rows sets the maximum number of
+    rows to read from textfile
     """
 
     if fn.split('.')[-1] in ('singlepulse', 'txt'):
@@ -153,9 +153,9 @@ def read_singlepulse(fn, max_rows=None):
         if len(A.shape)==1:
             A = A[None]
 
-        # Check if amber has compacted, in which case 
+        # Check if amber has compacted, in which case
         # there are two extra rows
-        if len(A[0]) > 7: 
+        if len(A[0]) > 7:
             # beam batch sample integration_step compacted_integration_steps time DM compacted_DMs SNR
             dm, sig, tt, downsample = A[:,-3], A[:,-1], A[:, -4], A[:, 3]
         else:
@@ -177,37 +177,35 @@ def read_singlepulse(fn, max_rows=None):
             pass
     else:
         print("Didn't recognize singlepulse file")
-        return 
+        return
 
     if len(A)==0:
         return 0, 0, 0, 0
 
     return dm, sig, tt, downsample
 
-def get_triggers(fn, sig_thresh=5.0, dm_min=0, dm_max=np.inf, 
-                 t_window=0.5, max_rows=None, t_max=np.inf,
-                 sig_max=np.inf):
+def get_triggers(fn, sig_thresh=5.0, dm_min=0, dm_max=np.inf, t_window=0.5, max_rows=None, t_max=np.inf, sig_max=np.inf):
     """ Get brightest trigger in each 10s chunk.
 
     Parameters
     ----------
-    fn : str 
+    fn : str
         filename with triggers (.npy, .singlepulse, .trigger)
     sig_thresh : float
         min S/N to include
-    t_window : float 
+    t_window : float
         Size of each time window in seconds
 
     Returns
     -------
     sig_cut : ndarray
-        S/N array of brightest trigger in each DM/T window 
+        S/N array of brightest trigger in each DM/T window
     dm_cut : ndarray
-        DMs of brightest trigger in each DM/T window 
+        DMs of brightest trigger in each DM/T window
     tt_cut : ndarray
-        Arrival times of brightest trigger in each DM/T window 
-    ds_cut : ndarray 
-        downsample factor array of brightest trigger in each DM/T window 
+        Arrival times of brightest trigger in each DM/T window
+    ds_cut : ndarray
+        downsample factor array of brightest trigger in each DM/T window
     """
 
     dm, sig, tt, downsample = read_singlepulse(fn, max_rows=max_rows)[:4]
@@ -221,14 +219,14 @@ def get_triggers(fn, sig_thresh=5.0, dm_min=0, dm_max=np.inf,
     downsample = np.delete(downsample, bad_sig_ind)
 
     sig_cut, dm_cut, tt_cut, ds_cut = [],[],[],[]
-    
+
     if len(tt)==0:
-        return 
+        return
 
     tduration = tt.max() - tt.min()
     ntime = int(tduration / t_window)
 
-    # Make dm windows between 90% of the lowest trigger and 
+    # Make dm windows between 90% of the lowest trigger and
     # 10% of the largest trigger
     if dm_min==0:
         dm_min = 0.9*dm.min()
@@ -248,11 +246,11 @@ def get_triggers(fn, sig_thresh=5.0, dm_min=0, dm_max=np.inf,
     # might wanna make this a search in (dm,t,width) cubes
     for dms in dm_list:
         for ii in xrange(ntime + 2):
-            try:    
+            try:
                 # step through windows of t_window seconds, starting from tt.min()
                 # and find max S/N trigger in each DM/time box
                 t0, tm = t_window*ii + tt_start, t_window*(ii+1) + tt_start
-                ind = np.where((dm<dms[1]) & (dm>dms[0]) & (tt<tm) & (tt>t0))[0] 
+                ind = np.where((dm<dms[1]) & (dm>dms[0]) & (tt<tm) & (tt>t0))[0]
                 ind_maxsnr = ind[np.argmax(sig[ind])]
                 sig_cut.append(sig[ind_maxsnr])
                 dm_cut.append(dm[ind_maxsnr])
@@ -286,7 +284,7 @@ class SNR_Tools:
         pass
 
     def sigma_from_mad(self, data):
-        """ Get gaussian std from median 
+        """ Get gaussian std from median
         aboslute deviation (MAD)
         """
         assert len(data.shape)==1, 'data should be one dimensional'
@@ -305,26 +303,26 @@ class SNR_Tools:
         ntime_r = len(std_chunk)
         stds = 1.148*np.sqrt((std_chunk[ntime_r//40:-ntime_r//40]**2.0).sum() /
                               (0.95*ntime_r))
-        snr_ = std_chunk[-1] / stds 
+        snr_ = std_chunk[-1] / stds
 
         return snr_
 
     def calc_snr_widths(self, data, widths=None):
-        """ Calculate the S/N of pulse profile after 
+        """ Calculate the S/N of pulse profile after
         trying 9 rebinnings.
 
         Parameters
         ----------
         arr   : np.array
-            (ntime,) vector of pulse profile 
+            (ntime,) vector of pulse profile
 
         Returns
         -------
-        snr : np.float 
+        snr : np.float
             S/N of pulse
         """
         assert len(data.shape)==1
-        
+
         ntime = len(data)
         snr_max = 0
         data -= np.median(data)
@@ -338,7 +336,7 @@ class SNR_Tools:
                 # skip if boxcar width is greater than 1/4th ntime
                 if ii > ntime//8:
                     continue
-                
+
                 arr_copy = data.copy()
                 arr_copy = np.roll(arr_copy, jj)
                 arr_ = arr_copy[:ntime//ii*ii].reshape(-1, ii).mean(-1)
@@ -359,37 +357,37 @@ class SNR_Tools:
 
         Parameters:
         ----------
-        fn_1 : str 
+        fn_1 : str
             name of input triggers text file
             (must be .trigger, .singlepulse, or .txt)
         fn_2 : str
-            name of input triggers text file for comparison 
+            name of input triggers text file for comparison
         dm_min : float
-            do not process triggers below this DM 
-        dm_max : float 
-            do not process triggers above this DM 
-        save_data : bool 
+            do not process triggers below this DM
+        dm_max : float
+            do not process triggers above this DM
+        save_data : bool
             if True save to np.array
-        sig_thresh : float 
-            do not process triggers below this S/N 
-        t_window : float 
-            time window within which triggers in 
-            fn_1 and fn_2 will be considered the same 
+        sig_thresh : float
+            do not process triggers below this S/N
+        t_window : float
+            time window within which triggers in
+            fn_1 and fn_2 will be considered the same
 
         Return:
         -------
-        Function returns four parameter arrays for 
-        each fn_1 and fn_2, which should be ordered so 
+        Function returns four parameter arrays for
+        each fn_1 and fn_2, which should be ordered so
         that they can be compared directly:
 
         grouped_params1, grouped_params2, matched_params
         """
-        snr_1, dm_1, t_1, w_1, ind_full_1 = get_triggers(fn_1, sig_thresh=sig_thresh, 
-                                    dm_min=dm_min, dm_max=dm_max, t_window=t_window, 
+        snr_1, dm_1, t_1, w_1, ind_full_1 = get_triggers(fn_1, sig_thresh=sig_thresh,
+                                    dm_min=dm_min, dm_max=dm_max, t_window=t_window,
                                     max_rows=max_rows, t_max=t_max)
 
-        snr_2, dm_2, t_2, w_2, ind_full_2 = get_triggers(fn_2, sig_thresh=sig_thresh, 
-                                    dm_min=dm_min, dm_max=dm_max, t_window=t_window, 
+        snr_2, dm_2, t_2, w_2, ind_full_2 = get_triggers(fn_2, sig_thresh=sig_thresh,
+                                    dm_min=dm_min, dm_max=dm_max, t_window=t_window,
                                     max_rows=max_rows, t_max=t_max)
 
         snr_2_reorder = []
@@ -398,7 +396,7 @@ class SNR_Tools:
         w_2_reorder = []
 
         ntrig_1 = len(snr_1)
-        ntrig_2 = len(snr_2)    
+        ntrig_2 = len(snr_2)
 
         par_1 = np.concatenate([snr_1, dm_1, t_1, w_1, ind_full_1]).reshape(5, -1)
         par_2 = np.concatenate([snr_2, dm_2, t_2, w_2, ind_full_2]).reshape(5, -1)
@@ -429,7 +427,7 @@ class SNR_Tools:
                 pparams = (tdiff[ind], t_1[ii], t_2[ind], dm_1[ii], dm_2[ind], snr_1[ii], snr_2[ind], w_1[ii], w_2[ind])
                 print("%1.4f  %5.1f  %5.1f  %5.1f  %5.1f %5.1f  %5.1f %5.1f  %5.1f" % pparams)
 
-                params_match = np.array([snr_1[ii], snr_2[ind], 
+                params_match = np.array([snr_1[ii], snr_2[ind],
                                          dm_1[ii], dm_2[ind],
                                          t_1[ii], t_2[ind],
                                          w_1[ii], w_2[ind]])
@@ -443,7 +441,7 @@ class SNR_Tools:
 
         if len(par_match_arr)==0:
             print("No matches found")
-            return 
+            return
 
         # concatenate list and reshape to (nparam, nmatch, 2 files)
         par_match_arr = np.concatenate(par_match_arr).reshape(-1, 4, 2)
@@ -458,7 +456,7 @@ class SNR_Tools:
             np.save(fn_2+'_params_grouped', par_2)
             np.save('params_matched', par_match_1)
 
-        return par_1, par_2, par_match_arr, ind_missed, ind_matched  
+        return par_1, par_2, par_match_arr, ind_missed, ind_matched
 
     def plot_comparison(self, par_1, par_2, par_match_arr, ind_missed, figname='./test.pdf'):
         fig = plt.figure(figsize=(14,14))
@@ -483,14 +481,14 @@ class SNR_Tools:
         plt.plot(snr_1, snr_1, color='k')
         plt.plot(snr_1[ind_missed], np.zeros([len(ind_missed)]), 'o', color='orange')
         plt.xlabel('Injected S/N', fontsize=13)
-        plt.ylabel('Detected S/N', fontsize=13)        
+        plt.ylabel('Detected S/N', fontsize=13)
         plt.legend(['Detected events','Expected S/N','Missed events'], fontsize=13)
 
         fig.add_subplot(312)
         plt.plot(dm_1_match, snr_1_match/snr_2_match, '.')
         plt.plot(dm_1[ind_missed], np.zeros([len(ind_missed)]), 'o', color='orange')
         plt.xlabel('DM', fontsize=13)
-        plt.ylabel('Expected S/N : Detected S/N', fontsize=13)        
+        plt.ylabel('Expected S/N : Detected S/N', fontsize=13)
         plt.legend(['Detected events','Missed events'], fontsize=13)
 
         fig.add_subplot(337)
@@ -545,31 +543,31 @@ if __name__=='__main__':
                         help="make plot if True (default False)", default=False)
 
     parser.add_option('--dm_min', dest='dm_min', type='float',
-                        help="", 
+                        help="",
                         default=0.0)
 
     parser.add_option('--dm_max', dest='dm_max', type='float',
-                        help="", 
+                        help="",
                         default=np.inf)
 
     parser.add_option('--t_max', dest='t_max', type='float',
-                        help="Only process first t_max seconds", 
+                        help="Only process first t_max seconds",
                         default=np.inf)
 
     parser.add_option('--t_window', dest='t_window', type='float',
-                        help="", 
+                        help="",
                         default=0.1)
 
     parser.add_option('--outdir', dest='outdir', type='str',
-                        help="directory to write data to", 
+                        help="directory to write data to",
                         default='./data/')
 
     parser.add_option('--title', dest='title', type='str',
-                        help="directory to write data to", 
+                        help="directory to write data to",
                         default='file1 vs. file2')
 
     parser.add_option('--figname', dest='figname', type='str',
-                        help="directory to write data to", 
+                        help="directory to write data to",
                         default='comparison.pdf')
 
     options, args = parser.parse_args()
@@ -577,16 +575,16 @@ if __name__=='__main__':
     fn_2 = args[1]
 
     try:
-        par_1, par_2, par_match_arr, ind_missed, ind_matched = SNRTools.compare_snr(fn_1, fn_2, 
-                                        dm_min=options.dm_min, 
+        par_1, par_2, par_match_arr, ind_missed, ind_matched = SNRTools.compare_snr(fn_1, fn_2,
+                                        dm_min=options.dm_min,
                                         dm_max=options.dm_max, save_data=False,
-                                        sig_thresh=options.sig_thresh, 
-                                        t_window=options.t_window, 
+                                        sig_thresh=options.sig_thresh,
+                                        t_window=options.t_window,
                                         max_rows=None, t_max=options.t_max)
     except TypeError:
         print("No matches, exiting")
         exit()
-        
+
 
     print('\nFound %d common trigger(s)' % par_match_arr.shape[1])
 
@@ -599,8 +597,7 @@ if __name__=='__main__':
 
     if options.mk_plot is True:
         import matplotlib.pyplot as plt
-        import plotter 
-        plotter.plot_comparison(par_1, par_2, par_match_arr, ind_missed, 
+        import plotter
+        plotter.plot_comparison(par_1, par_2, par_match_arr, ind_missed,
                                 suptitle=options.title, figname=options.figname)
 #        SNRTools.plot_comparison(par_1, par_2, par_match_arr, ind_missed, figname=figname)
-

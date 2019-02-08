@@ -1,0 +1,265 @@
+{% load static %}
+
+<div class="row question-set {% if row.visited %}visited{% endif %}">
+    <div class="col-md-4">
+        {% for question in row.questions %}
+            <div class="question">{{ question }}</div>
+        {% endfor %}
+    </div>
+    <div class="col-md-8">
+        <div class="ra_dec">{{ row.divs.0.1.ra }} {{ row.divs.0.1.dec }} (J2000)</div>
+        {% for div in row.divs %}
+            <div class="single">
+                <div class="glyphicon-holder text-right">
+                    <span class="glyphicon glyphicon-info-sign" data-toggle="modal" data-target="#helpModal"></span>
+                </div>
+                {{ div.0 | safe }}
+                {% if div.2 %}
+                    <div id="{{ div.2 }}" class="lasso_select">Components: <span id="{{ div.2 }}_span"
+                                                                                 class="number">{{ div.3 }}</span></div>
+                    <input type="hidden" id="{{ div.2 }}_data_x" name="{{ div.2 }}_data_x" value="{{ div.4 }}"/>
+                    <input type="hidden" id="{{ div.2 }}_data_y" name="{{ div.2 }}_data_y" value="{{ div.5 }}"/>
+                    <input id="{{ div.2 }}_zero-button"
+                           class="btn btn-danger btn-xs zero-button {% if div.3 == 'None' %}visible{% endif %}"
+                           type="button" value="Select 0"/>
+                {% endif %}
+            </div>
+
+        {% endfor %}
+    </div>
+    {% for script in row.scripts %}
+        {{ script | safe }}
+    {% endfor %}
+</div>
+
+<!-- Modal -->
+<div class="modal fade helpModal" id="helpModal" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <div class="modal-header text-justify">
+                <h4 class="modal-title">Use of Galaxy Image Tools</h4>
+            </div>
+            <div class="modal-body text-justify">
+                <ul>
+                    <li>
+                        <div class="tool-header">Pan <img src="{% static 'images/Pan.png' %}"/></div>
+                        <div class="tool-description">This tool allows to pan the image
+                            left, right, up, and down. By default this is the selected tool where appropriate.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="tool-header">Lasso Select <img src="{% static 'images/LassoSelect.png' %}"/>
+                        </div>
+                        <div class="tool-description">This tool is used to facilitate selection on the image. You can use this tool
+                            to select radio components on the galaxy images. <span class="highlight">Double
+                                clicking/tapping</span> on the image will deselect all the drawn components and also
+                            reset the number of components zero. By default this is the selected tool where
+                            appropriate.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="tool-header">Box Zoom <img src="{% static 'images/BoxZoom.png' %}"/>
+                        </div>
+                        <div class="tool-description">This tool allows to zoom on a selected area of the image.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="tool-header">Wheel Zoom <img src="{% static 'images/WheelZoom.png' %}"/>
+                        </div>
+                        <div class="tool-description">This tool allows to use the mouse wheel to zoom in and out on the
+                            image.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="tool-header">Reset <img src="{% static 'images/Reset.png' %}"/>
+                        </div>
+                        <div class="tool-description">This tool allows to reset the image to its original state.
+                            Please note that this will <span class="highlight">not</span> reset selections applied using the <span
+                                    class="highlight">Lasso Select</span> tool.
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- End Modal content -->
+    </div>
+</div>
+
+
+<div class="modal fade helpModal" id="helpModalSkyProjection" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <div class="modal-header text-justify">
+                <h4 class="modal-title">About this plot</h4>
+            </div>
+            <div class="modal-body text-justify">
+                <ul>
+                    <li>
+                        <div class="tool-description">This plot renders a blue point for every galaxy in our database.
+                            The database is based on data from The VLA FIRST Survey (<a href="http://sundog.stsci.edu/index.html">http://sundog.stsci.edu/index.html</a>).<br />
+                            Red stars represent galaxies that have been labeled using this tool.
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-header text-justify">
+                <h4 class="modal-title">Use of Galaxy Image Tools</h4>
+            </div>
+            <div class="modal-body text-justify">
+                <ul>
+                    <li>
+                        <div class="tool-header">Pan <img src="{% static 'images/Pan.png' %}"/></div>
+                        <div class="tool-description">This tool allows to pan the image
+                            left, right, up, and down. By default this is the selected tool where appropriate.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="tool-header">Box Zoom <img src="{% static 'images/BoxZoom.png' %}"/>
+                        </div>
+                        <div class="tool-description">This tool allows to zoom on a selected area of the image.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="tool-header">Wheel Zoom <img src="{% static 'images/WheelZoom.png' %}"/>
+                        </div>
+                        <div class="tool-description">This tool allows to use the mouse wheel to zoom in and out on the
+                            image.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="tool-header">Reset <img src="{% static 'images/Reset.png' %}"/>
+                        </div>
+                        <div class="tool-description">This tool allows to reset the image to its original state.
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- End Modal content -->
+    </div>
+</div>
+
+<div class="modal fade helpModal" id="helpModalFluxSnr" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <div class="modal-header text-justify">
+                <h4 class="modal-title">About this plot</h4>
+            </div>
+            <div class="modal-body text-justify">
+                <ul>
+                    <li>
+                        <div class="tool-description">This plot features hexagonal bins for the galaxy population.
+                            Red asterisks represent galaxies that have been labeled using this tool.
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-header text-justify">
+                <h4 class="modal-title">Use of Galaxy Image Tools</h4>
+            </div>
+            <div class="modal-body text-justify">
+                <ul>
+                    <li>
+                        <div class="tool-header">Pan <img src="{% static 'images/Pan.png' %}"/></div>
+                        <div class="tool-description">This tool allows to pan the image
+                            left, right, up, and down. By default this is the selected tool where appropriate.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="tool-header">Box Zoom <img src="{% static 'images/BoxZoom.png' %}"/>
+                        </div>
+                        <div class="tool-description">This tool allows to zoom on a selected area of the image.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="tool-header">Wheel Zoom <img src="{% static 'images/WheelZoom.png' %}"/>
+                        </div>
+                        <div class="tool-description">This tool allows to use the mouse wheel to zoom in and out on the
+                            image.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="tool-header">Reset <img src="{% static 'images/Reset.png' %}"/>
+                        </div>
+                        <div class="tool-description">This tool allows to reset the image to its original state.
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- End Modal content -->
+    </div>
+</div>
+
+<div class="modal fade helpModal" id="helpModalNComponentsSnr" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <div class="modal-header text-justify">
+                <h4 class="modal-title">About this plot</h4>
+            </div>
+            <div class="modal-body text-justify">
+                <ul>
+                    <li>
+                        <div class="tool-description">Each red asterisk represents a galaxy that have been labeled using this tool.
+                            The number of components correspond to the number of components selected on the FIRST image during
+                            labeling.
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-header text-justify">
+                <h4 class="modal-title">Use of Galaxy Image Tools</h4>
+            </div>
+            <div class="modal-body text-justify">
+                <ul>
+                    <li>
+                        <div class="tool-header">Pan <img src="{% static 'images/Pan.png' %}"/></div>
+                        <div class="tool-description">This tool allows to pan the image
+                            left, right, up, and down. By default this is the selected tool where appropriate.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="tool-header">Box Zoom <img src="{% static 'images/BoxZoom.png' %}"/>
+                        </div>
+                        <div class="tool-description">This tool allows to zoom on a selected area of the image.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="tool-header">Wheel Zoom <img src="{% static 'images/WheelZoom.png' %}"/>
+                        </div>
+                        <div class="tool-description">This tool allows to use the mouse wheel to zoom in and out on the
+                            image.
+                        </div>
+                    </li>
+                    <li>
+                        <div class="tool-header">Reset <img src="{% static 'images/Reset.png' %}"/>
+                        </div>
+                        <div class="tool-description">This tool allows to reset the image to its original state.
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- End Modal content -->
+    </div>
+</div>

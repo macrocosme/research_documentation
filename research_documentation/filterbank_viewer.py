@@ -16,38 +16,33 @@ import atexit
 import numpy as np
 from vispy import app, scene, gloo, visuals
 from vispy.util.filter import gaussian_filter
-
-from arts_analysis import reader
-try:
-	from presto_python import filterbank
-except:
-    pass
-
-
-class FilterbankReader(object):
-    def __init__(self):
-        self.chunk_size = 1024
-        self.rate = rate = 44100.
-        fn = '/Users/vohl/Documents/data/CB17.fil'
-        self.fil_obj = filterbank.FilterbankFile(fn)
-
-        # self.data = reader.read_fil_data(fn, start=self.index_start, stop=self.index_start + self.chunk_size)[0].data
-        self.data = self.fil_obj.get_spectra(0, 250000).data
-        self.ptr = 0
-
-    def get_frames(self):
-        if self.ptr + self.chunk_size > len(self.data):
-            end = self.chunk_size - (len(self.data) - self.ptr)
-            frame = np.concatenate((self.data[self.ptr:], self.data[:end]))
-        else:
-            frame = self.data[self.ptr:self.ptr+self.chunk_size]
-
-        self.ptr = (self.ptr + self.chunk_size) % (len(self.data) - self.chunk_size)
-
-        return [frame]
-
-    def start(self):
-        pass
+# from presto_python import filterbank
+#
+#
+# class FilterbankReader(object):
+#     def __init__(self):
+#         self.chunk_size = 1024
+#         self.rate = rate = 44100.
+#         fn = '/Users/vohl/Documents/data/CB17.fil'
+#         self.fil_obj = filterbank.FilterbankFile(fn)
+#
+#         # self.data = reader.read_fil_data(fn, start=self.index_start, stop=self.index_start + self.chunk_size)[0].data
+#         self.data = self.fil_obj.get_spectra(0, 250000).data
+#         self.ptr = 0
+#
+#     def get_frames(self):
+#         if self.ptr + self.chunk_size > len(self.data):
+#             end = self.chunk_size - (len(self.data) - self.ptr)
+#             frame = np.concatenate((self.data[self.ptr:], self.data[:end]))
+#         else:
+#             frame = self.data[self.ptr:self.ptr+self.chunk_size]
+#
+#         self.ptr = (self.ptr + self.chunk_size) % (len(self.data) - self.chunk_size)
+#
+#         return [frame]
+#
+#     def start(self):
+#         pass
 
 
 try:

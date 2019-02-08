@@ -1,0 +1,44 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block additional_styles %}
+    <link rel="stylesheet" href="{% static 'style/survey_scroll.css' %}"/>
+{% endblock additional_styles %}
+
+{% block additional_scripts %}
+    <script src="{% static 'javascript/survey.js' %}"></script>
+{% endblock additional_scripts %}
+
+{% block info-bar %}
+{% endblock info-bar %}
+
+{% block page_header %}
+    ADMINISTRATION
+{% endblock page_header %}
+
+{% block content %}
+    <div class="row">
+        <div id="survey-main" class="col-md-8">
+            <form class="form-row" action="" method="post" enctype="multipart/form-data" onsubmit="$('#info').show(true);">
+                {% csrf_token %}
+                {{ div | safe }}
+                {{ script | safe }}
+                <div class="container-fluid">
+                    {% if message %}
+                        <div class="alert alert-{{ message_class }}">
+                            {{ message }}
+                        </div>
+                    {% endif %}
+                    <div class="buttons col-md-6 text-left">
+                        Press this button to retrain acton for a new survey.
+                    </div>
+                    <div class="buttons col-md-6 text-right">
+                        <input class="btn btn-success" type="submit" tabindex="100" name="submit"
+                               value="(Re)Train Recommender" />
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+{% endblock content %}

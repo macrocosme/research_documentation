@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>FR-I, FR-II</title>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.4.0/bootbox.min.js"></script>
+
+    <!-- Home styles -->
+    <link rel="stylesheet" href="{% static 'style/styles.css' %}"/>
+
+    <link href="https://fonts.googleapis.com/css?family=Arvo:400,700|Slabo+27px&effect=anaglyph" rel="stylesheet">
+
+    <script src="http://cdn.pydata.org/bokeh/release/bokeh-0.12.15.min.js"></script>
+    <link rel="stylesheet" href="http://cdn.pydata.org/bokeh/release/bokeh-0.12.15.min.css">
+    {% block additional_styles %}
+    {% endblock additional_styles %}
+</head>
+<body>
+    {% include 'base/header.html' %}
+    {% include 'base/navigation.html' %}
+    <div class="container">
+        <div class="row">
+            <div class="col col-md-10 main-content">
+
+                <div class="page-header">
+                    {% block page_header %}
+                        alert
+                    {% endblock page_header %}
+                </div>
+                {% block content %}
+                {% endblock content %}
+            </div>
+            {% if user.is_authenticated %}
+            <div class="col col-md-2 align-self-center info-bar">
+                {% block info-bar %}
+                {% endblock info-bar %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% include 'base/footer.html' %}
+    {% block javascript %}
+    {% endblock javascript %}
+</body>
+</html>

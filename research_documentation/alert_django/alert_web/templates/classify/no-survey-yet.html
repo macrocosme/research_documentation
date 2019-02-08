@@ -1,0 +1,44 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block info-bar %}
+{% endblock info-bar %}
+
+{% block page_header %}
+    NO SURVEY YET AVAILABLE
+{% endblock page_header %}
+
+{% block additional_styles %}
+    <link rel="stylesheet" href="{% static 'style/intermediate.css' %}"/>
+{% endblock additional_styles %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="new-survey-notification">
+                <ul>
+                    <li class="row">
+                        <div class="notification-wrapper col-md-offset-3 col-md-6">
+                            <div class="notification-header">
+                                Sorry! No Survey Found.
+                            </div>
+                            <div class="notification-body">
+                                <p>
+                                    Dear <span
+                                        class="name">{{ user.title }} {{ user.first_name }} {{ user.last_name }}</span>,
+                                </p>
+                                <p>
+                                    There is no current survey.
+                                </p>
+                                <p>
+                                    Please contact your system administrator to initiate one!
+                                </p>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+{% endblock content %}

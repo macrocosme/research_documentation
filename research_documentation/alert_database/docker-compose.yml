@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  db:
+    container_name: alert_database_mysql
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: alert_dev
+      MYSQL_USER: alert_web
+      MYSQL_PASSWORD: test-password#1
+    ports:
+       - "40001:3306"

@@ -1,9 +1,6 @@
 import numpy as np
 import argparse
-try:
-    import cPickle as pickle
-except:
-    import pickle
+import cPickle as pickle
 
 def compute_mad(array, med):
     series_mad = np.abs(array - med)
@@ -38,8 +35,8 @@ def compute_mom(L):
 def main(**kwargs):
     from arts_analysis import reader
     import copy
-    
-    N = np.array([1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500])
+
+    N = np.array([1, 5, 10, 50, 100, 250, 500, 1000, 2500])
     if kwargs['input_type'] == 'filterbank':
         data = reader.read_fil_data(kwargs['filterbank_filename'], start=0, stop=250000)[0]
     if kwargs['input_type'] == 'time_chunks':
@@ -62,7 +59,6 @@ def main(**kwargs):
 
         print kwargs['input_type']
 
-        # Fork on the correct technique to generate data
         if kwargs['input_type'] == 'filterbank':
             xx = copy.deepcopy(data)
             xx.dedisperse(ii)
@@ -71,12 +67,9 @@ def main(**kwargs):
             xx = np.random.normal(0, 1, 25000)
         elif kwargs['input_type'] == 'time_chunks':
             xx = reader.read_fil_data(kwargs['filterbank_filename'], start=index_start, stop=index_start+kwargs['chunk_size'])[0]
-            if kwargs['DM']:
-                xx.dedisperse(kwargs['DM'])
             xx = np.mean(xx.data, axis=0)
             index_start += kwargs['chunk_size']
 
-        # Iterate over downsamling
         for nn in N:
             print ("\t%d" % nn)
 
@@ -89,8 +82,7 @@ def main(**kwargs):
                 SS1[nn] = snr
 
             print ("\t\tCompute mom/stdev")
-            mom = compute_mom(x)
-            snr = (x.max() - mom)/(np.std(x))
+            snr = (x.max() - compute_mom(x))/(np.std(x))
             if snr > SS2[nn]:
                 SS2[nn] = snr
 
@@ -101,7 +93,8 @@ def main(**kwargs):
                 SS3[nn] = snr
 
             print ("\t\tCompute mom/mad")
-            snr = (x.max() - mom)/(1.48*compute_mad(x, mom))
+            med = compute_mom(x)
+            snr = (x.max() - med)/(1.48*compute_mad(x, med))
             if snr > SS4[nn]:
                 SS4[nn] = snr
 
@@ -167,12 +160,7 @@ def check_defaults(**kwargs):
     if kwargs['make_figure_only'] == None:
         kwargs['make_figure_only'] = False
 
-    if kwargs['filterbank_filename'] == None:
-        #kwargs['filterbank_filename'] = '/data2/output/20181020_2018-10-20-09:59:59.FRB171004_filterbank/CB17.fil'
-        kwargs['filterbank_filename'] = '/home/arts/vohl/data/input/20181011/dm0.0_nfrb100_204_sec_20181011-0847.fil'
-
-    if kwargs['DM'] == None:
-        kwargs['DM'] = 0
+    kwargs['filterbank_filename'] = '/data2/output/20181020_2018-10-20-09:59:59.FRB171004_filterbank/CB17.fil'
 
     return kwargs
 
@@ -195,8 +183,6 @@ if __name__ == "__main__":
     parser.add_argument('--xscale', help="Scaling for the x axis", type=str, choices=['linear', 'log'])
     parser.add_argument('--yscale', help="Scaling for the y axis", type=str, choices=['linear', 'log'])
     parser.add_argument('--make_figure_only', help="Make figure only (True/False) from pickle file", type=bool)
-    parser.add_argument('--filterbank_filename', help='Filterbank filename (and path if file not in current repository)', type=str)
-    parser.add_argument('--DM', help='Value of DM for dedispersion', type=int)
 
     args = parser.parse_args()
 

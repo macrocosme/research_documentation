@@ -16,7 +16,7 @@ except:
 	pass 
 
 try:
-	import filterbank
+	from ..presto_python import filterbank
 except:
     pass
 

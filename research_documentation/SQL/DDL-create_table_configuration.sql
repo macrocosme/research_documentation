@@ -1,3 +1,4 @@
+USE alert_dev;
 CREATE TABLE Configuration(
    ID INTEGER,
    CONFIGURATION_NAME VARCHAR(300),

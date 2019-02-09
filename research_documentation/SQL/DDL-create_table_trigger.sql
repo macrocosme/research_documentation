@@ -1,4 +1,4 @@
-CREATE TABLE Trigger(
+CREATE TABLE AMBERT_Trigger(
    ID INTEGER,
    beam_id INT,
    batch_id INT,

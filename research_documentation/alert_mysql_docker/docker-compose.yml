@@ -10,4 +10,10 @@ services:
       MYSQL_USER: alert_web
       MYSQL_PASSWORD: test-password#1
     ports:
-       - "40001:3306"
+      - "40001:3306"
+    networks:
+      - alert_bridge
+
+networks:
+  alert_bridge:
+    external: true

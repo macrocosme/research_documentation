@@ -1,0 +1,4 @@
+mysqlclient
+ipython-sql
+astropy
+pymysql

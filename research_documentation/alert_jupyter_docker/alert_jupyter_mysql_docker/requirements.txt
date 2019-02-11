@@ -1,3 +1,0 @@
-mysqlclient
-ipython-sql
-astropy

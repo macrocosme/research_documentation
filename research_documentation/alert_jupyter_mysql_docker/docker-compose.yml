@@ -1,0 +1,24 @@
+version: '3'
+
+services:
+  jupyter:
+    container_name: jupyter_alert
+    build: ./
+    volumes:
+      - ./:/home/jovyan/work sm-python-bi
+    ports:
+      - "8888:8888"
+    command: "start-notebook.sh --NotebookApp.token='b2cd90e9a0dd'"
+    networks:
+      - external: alert_bridge
+
+
+#     volumes:
+#       - "sshfsdata:/home/jovyan/work/backup_results"
+#
+# volumes:
+#   sshfsdata:
+#     driver: vieux/sshfs:latest
+#     driver_opts:
+#       sshcmd: "vohl@arts005:/backup_results"
+#       allow_other: ""

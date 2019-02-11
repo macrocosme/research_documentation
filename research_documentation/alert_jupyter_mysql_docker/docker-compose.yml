@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  db:
+    container_name: alert_database_mysql
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: alert_dev
+      MYSQL_USER: alert_web
+      MYSQL_PASSWORD: test-password#1
+    networks:
+      - alert-backend
+    ports:
+       - "40001:3306"
+
+  jupyter:
+    container_name: jupyter_alert
+    build: ./
+    volumes:
+      # - ./:/home/jovyan/docker
+      # - ./requirements.txt:/home/jovyan/work
+      - ../plots/:/home/jovyan/work/plots
+      - ../python_scripts:/home/jovyan/work/python_scripts
+      - ../notebooks/:/home/jovyan/work/notebooks
+      - ../amber_outputs:/home/jovyan/work/amber_outputs
+    ports:
+      - "8888:8888"
+    depends_on:
+      - db
+    links:
+      - db:db
+    networks:
+      - alert-backend
+    command: "sm-python-bi; start-notebook.sh --NotebookApp.token='b2cd90e9a0dd'"
+
+networks:
+  alert-backend:
+    driver: bridge

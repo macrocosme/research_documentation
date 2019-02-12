@@ -6,7 +6,7 @@ ADD requirements.txt /code/
 
 USER root
 RUN apt-get update
-RUN apt install -y python-dev python3-dev libmysqlclient-dev
+RUN apt-get install -y apt-utils python-dev python3-dev libmysqlclient-dev
 
 USER jovyan
 WORKDIR /home/jovyan/work

@@ -4,13 +4,19 @@ services:
   jupyter:
     container_name: jupyter_alert
     build: ./
+    environment:
+      MYSQL_HOST: alert_database_mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: example
+      MYSQL_DATABASE: alert_dev
     volumes:
       # - ./:/home/jovyan/docker sm-python-bi
       # - ./requirements.txt:/home/jovyan/work
-      - ../plots/:/home/jovyan/work/plots
-      - ../python_scripts:/home/jovyan/work/python_scripts
-      - ../notebooks/:/home/jovyan/work/notebooks
-      - ../amber_outputs:/home/jovyan/work/amber_outputs
+      - ../../plots/:/home/jovyan/work/plots
+      - ../../python_scripts:/home/jovyan/work/python_scripts
+      - ../../notebooks/:/home/jovyan/work/notebooks
+      - ../../amber_outputs:/home/jovyan/work/amber_outputs
     ports:
       - "8888:8888"
     command: "start-notebook.sh --NotebookApp.token='b2cd90e9a0dd'"

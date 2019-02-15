@@ -23,7 +23,7 @@ Default User settings:
 - user: `root`
 - pasword: `example`
 
-* Note that this simple setting should be changed for real life usage. 
+Note that this simple setting should be changed for real life usage. 
 
 Jupyter Notebook
 ----------------

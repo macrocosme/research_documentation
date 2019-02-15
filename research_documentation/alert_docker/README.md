@@ -15,6 +15,22 @@ Note: the mysql image should preferably be up before starting the jupyter image.
 To stop the images, run `./scripts/compose_***_stop.sh`
 To destroy the content of the database, run `./scripts/compose_mysql_down.sh`
 
+Network
+-------
+When creating the network, a bridge called `alert_bridge` is created. It can then be used as an external network by containers.
+
+e.g. `./alert_mysql_docker/docker-compose.yml` and `alert_jupyter_docker/docker-compose.yml` include:
+```
+networks:
+  - alert_bridge
+```
+
+The Jupyter docker-compose file also includes the external link to MySQL to enable connectivity:
+```
+external_links:
+  - alert_database_mysql
+```
+
 MySQL
 ------
 Once the image running, MySQL is reachable at `0.0.0.0:40001` from outside of docker (e.g. local MySQL workbench), and at `alert_database_mysql:3306` from within docker (any container connecting to the *alert_bridge* network).
@@ -23,7 +39,7 @@ Default User settings:
 - user: `root`
 - pasword: `example`
 
-Note that this simple setting should be changed for real life usage. 
+Note that this simple setting should be changed for real life usage.
 
 Jupyter Notebook
 ----------------

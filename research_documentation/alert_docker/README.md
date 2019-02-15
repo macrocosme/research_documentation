@@ -19,10 +19,11 @@ MySQL
 ------
 Once the image running, MySQL is reachable at `0.0.0.0:40001` from outside of docker (e.g. local MySQL workbench), and at `alert_database_mysql:3306` from within docker (any container connecting to the *alert_bridge* network).
 
-Default User settings (to be changed for real life usage):
+Default User settings:
+- user: `root`
+- pasword: `example`
 
-user: root
-pasword: example
+* Note that this simple setting should be changed for real life usage. 
 
 Jupyter Notebook
 ----------------

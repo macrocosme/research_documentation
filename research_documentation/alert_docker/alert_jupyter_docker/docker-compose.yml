@@ -11,8 +11,6 @@ services:
       MYSQL_PASSWORD: example
       MYSQL_DATABASE: alert_dev
     volumes:
-      # - ./:/home/jovyan/docker sm-python-bi
-      # - ./requirements.txt:/home/jovyan/work
       - ../../plots/:/home/jovyan/work/plots
       - ../../python_scripts:/home/jovyan/work/python_scripts
       - ../../notebooks/:/home/jovyan/work/notebooks

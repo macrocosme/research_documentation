@@ -17,7 +17,7 @@ To destroy the content of the database, run `./scripts/compose_mysql_down.sh`
 
 Network
 -------
-When creating the network, a bridge called `alert_bridge` is created. It can then be used as an external network by containers.
+When creating the network (step 1 of previous Section), a bridge called `alert_bridge` is created. It can then be used as an external network by containers.
 
 e.g. `./alert_mysql_docker/docker-compose.yml` and `alert_jupyter_docker/docker-compose.yml` include:
 ```

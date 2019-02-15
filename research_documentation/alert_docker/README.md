@@ -14,3 +14,16 @@ Note: the mysql image should preferably be up before starting the jupyter image.
 
 To stop the images, run `./scripts/compose_***_stop.sh`
 To destroy the content of the database, run `./scripts/compose_mysql_down.sh`
+
+MySQL
+------
+Once the image running, MySQL is reachable at `0.0.0.0:40001` from outside of docker (e.g. local MySQL workbench), and at `alert_database_mysql:3306` from within docker (any container connecting to the *alert_bridge* network).
+
+Default User settings (to be changed for real life usage):
+
+user: root
+pasword: example
+
+Jupyter Notebook
+----------------
+Once the image running, Jupyter reachable from a browser at `0.0.0.0:8888`. To log into the notebook server, use the key `b2cd90e9a0dd` (also to be changed in a real life setting).

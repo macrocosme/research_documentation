@@ -1,0 +1,26 @@
+# nrDMs
+2048
+# timers.inputLoad
+0.000000
+# timers.search
+1230.908552
+# inputHandlingTotal inputHandlingAvg err
+1139.047935 0.759872 0.011146
+# inputCopyTotal inputCopyAvg err
+12.474701 0.008322 0.000534
+# dedispersionStepOneTotal dedispersionStepOneAvg err
+7.491377 0.004998 0.000023
+# dedispersionStepTwoTotal dedispersionStepTwoAvg err
+3.750608 0.002502 0.000079
+# integrationTotal integrationAvg err
+13.575287 0.001132 0.000968
+# maxStdSigmaCutTotal maxAvg err
+2.624517 0.000195 0.000362
+# medianOfMediansStepOneTotal medianOfMediansStepOneAvg err
+42.867199 0.003177 0.006578
+# medianOfMediansStepTwoTotal medianOfMediansStepTwoAvg err
+6.707343 0.000497 0.001112
+# outputCopyTotal outputCopyAvg err
+0.555823 0.000021 0.000011
+# triggerTimeTotal triggerTimeAvg err
+0.432472 0.000026 0.000026

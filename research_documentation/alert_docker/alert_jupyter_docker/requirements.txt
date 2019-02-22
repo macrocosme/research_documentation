@@ -1,4 +1,5 @@
 mysqlclient
 ipython-sql
+sqlalchemy
 astropy
-pymysql
+presto

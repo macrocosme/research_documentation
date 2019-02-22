@@ -14,7 +14,7 @@ services:
       - ../../plots/:/home/jovyan/work/plots
       - ../../python_scripts:/home/jovyan/work/python_scripts
       - ../../notebooks/:/home/jovyan/work/notebooks
-      - ../../amber_results:/home/jovyan/work/amber_results
+      - ../../results:/home/jovyan/work/results
     ports:
       - "8888:8888"
     command: "start-notebook.sh --NotebookApp.token='b2cd90e9a0dd'"

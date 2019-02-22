@@ -1,0 +1,22 @@
+# nrDMs
+2048
+# timers.inputLoad
+0.000000
+# timers.search
+389.894508
+# inputHandlingTotal inputHandlingAvg err
+374.035350 0.374410 0.014100
+# inputCopyTotal inputCopyAvg err
+3.918527 0.003922 0.000187
+# dedispersionStepOneTotal dedispersionStepOneAvg err
+2.585978 0.002589 0.000350
+# dedispersionStepTwoTotal dedispersionStepTwoAvg err
+1.340522 0.001342 0.000193
+# integrationTotal integrationAvg err
+6.256025 0.000783 0.000642
+# snrTotal snrAvg err
+0.774981 0.000086 0.000188
+# outputCopyTotal outputCopyAvg err
+0.192106 0.000021 0.000004
+# triggerTimeTotal triggerTimeAvg err
+0.225038 0.000020 0.000010

@@ -1,0 +1,130 @@
+#!/usr/bash
+
+function compare_heimdall_amber() {
+	py_path=/home/vohl/software/arts-analysis
+	fncand=$1 # ex: FILE.cand
+	fntrig=$2 # ex: FILE.trigger
+	figname=$3 # ex: compare_method1_v_method2.pdf
+	title=$4 # ex: "sigmaCut_vs_standard"
+	sigmaCut=$5
+
+	python $py_path/tools.py $fncand $fntrig --algo1 Heimdall --algo2 Amber$5 --mk_plot --dm_max 825. --figname $figname --title $title
+}
+
+function compare_amber_heimdall() {
+	py_path=/home/vohl/software/arts-analysis
+	fntrig=$1 # ex: FILE.trigger
+	fncand=$2 # ex: FILE.cand
+	figname=$3 # ex: compare_method1_v_method2.pdf
+	title=$4 # ex: "sigmaCut_vs_standard"
+	sigmaCut=$5
+
+	python $py_path/tools.py $fntrig $fncand --algo1 Amber$5 --algo2 Heimdall --mk_plot --dm_max 825. --figname $figname --title $title
+}
+
+function compare_amber_amber() {
+	py_path=/home/vohl/software/arts-analysis
+	fntrig1=$1 # ex: FILE.trigger
+	fntrig2=$2 # ex: FILE.trigger
+	figname=$3 # ex: compare_method1_v_method2.pdf
+	title=$4 # ex: "sigmaCut_vs_standard"
+	algo1=$5
+	algo2=$6
+
+	python $py_path/tools.py $fntrig1 $fntrig2 --algo1 Amber$5 --algo2 Amber$6 --mk_plot --dm_max 825. --figname $figname --title $title
+}
+
+function make_heimdall_amber_plots() {
+	basepath=/data1/vohl
+	List=(dm100.0_nfrb500_1536_sec_20190214-1542 dm400.0_nfrb500_1536_sec_20190214-1542
+dm10.0_nfrb500_1536_sec_20190214-1542 dm50.0_nfrb500_1536_sec_20190214-1542);
+	Sigmas=(3.0 2.5)
+
+	for sigma in ${Sigmas[*]}; do
+		for filename in ${List[*]}; do
+			# echo $filename
+			file1=${basepath}/results/heimdall/${filename}.cand
+			file2=${basepath}/results/sigmaCut${sigma}/${filename}/${filename}.amber.trigger
+
+			if [ ! -d "${basepath}/plots" ]
+			then
+				mkdir ${basepath}/plots
+			fi
+
+			compare_heimdall_amber $file1  $file2  ${basepath}/plots/${filename}_sigmaCut${sigma}_heimdall_vs_amber.pdf  sigmaCut${sigma}_heimdall_vs_amber ${sigma};
+			echo
+			wait;
+		done;
+	done;
+}
+
+function make_amber_heimdall_plots() {
+	basepath=/data1/vohl
+	List=(dm100.0_nfrb500_1536_sec_20190214-1542 dm400.0_nfrb500_1536_sec_20190214-1542
+dm10.0_nfrb500_1536_sec_20190214-1542 dm50.0_nfrb500_1536_sec_20190214-1542);
+	Sigmas=(3.0 2.5)
+
+	for sigma in ${Sigmas[*]}; do
+		for filename in ${List[*]}; do
+			# echo $filename
+			file1=${basepath}/results/sigmaCut${sigma}/${filename}/${filename}.amber.trigger
+			file2=${basepath}/results/heimdall/${filename}.cand
+
+			if [ ! -d "${basepath}/plots" ]
+			then
+				mkdir ${basepath}/plots
+			fi
+
+			compare_amber_heimdall $file1 $file2 ${basepath}/plots/${filename}_sigmaCut${sigma}_amber_vs_heimdall.pdf sigmaCut${sigma}_amber_vs_heimdall ${sigma};
+			wait;
+		done;
+	done;
+}
+
+function make_amber3.0_amber2.5_plots() {
+	basepath=/data1/vohl
+	List=(dm100.0_nfrb500_1536_sec_20190214-1542 dm400.0_nfrb500_1536_sec_20190214-1542
+dm10.0_nfrb500_1536_sec_20190214-1542 dm50.0_nfrb500_1536_sec_20190214-1542);
+
+	for filename in ${List[*]}; do
+		# echo $filename
+		file1=${basepath}/results/sigmaCut3.0/${filename}/${filename}.amber.trigger
+		file2=${basepath}/results/sigmaCut2.5/${filename}/${filename}.amber.trigger
+
+		if [ ! -d "${basepath}/plots" ]
+		then
+			mkdir ${basepath}/plots
+		fi
+
+		compare_amber_amber $file1 $file2 ${basepath}/plots/${filename}_sigmaCut3.0_vs_2.5.pdf sigmaCut3.0_vs_2.5 3.0 2.5;
+		wait;
+	done;
+}
+
+function make_amber2.5_amber3.0_plots() {
+	basepath=/data1/vohl
+	plotpath=${basepath}/plots/
+	List=(dm100.0_nfrb500_1536_sec_20190214-1542 dm400.0_nfrb500_1536_sec_20190214-1542
+dm10.0_nfrb500_1536_sec_20190214-1542 dm50.0_nfrb500_1536_sec_20190214-1542);
+
+	for filename in ${List[*]}; do
+		# echo $filename
+		file1=${basepath}/results/sigmaCut2.5/${filename}/${filename}.amber.trigger
+		file2=${basepath}/results/sigmaCut3.0/${filename}/${filename}.amber.trigger
+
+		if [ ! -d "${basepath}/plots" ]
+		then
+			mkdir ${basepath}/plots
+		fi
+
+		compare_amber_amber $file1 $file2 ${basepath}/plots/${filename}_sigmaCut2.5_vs_3.0.pdf sigmaCut2.5_vs_3.0 2.5 3.0;
+		wait;
+	done;
+}
+
+function gen_plots() {
+	make_heimdall_amber_plots &
+	make_amber_heimdall_plots &
+	make_amber3.0_amber2.5_plots &
+	make_amber2.5_amber3.0_plots &
+}

@@ -1,0 +1,420 @@
+#!/usr/bash
+
+function setup_amber () {
+	spack unload amber
+	spack unload amber@development
+	spack load cmake googletest gcc
+	export CC=$(which gcc)
+	export CXX=$(which g++)
+	export PSRDADA=1
+	export OPENMP=1
+	export SOURCE_ROOT=$HOME/software/AMBER/src
+	export INSTALL_ROOT=$HOME/software/AMBER/install
+	export LD_LIBRARY_PATH=$INSTALL_ROOT/lib:$INSTALL_ROOT/lib64:$LD_LIBRARY_PATH
+	export PATH=$INSTALL_ROOT/bin:$PATH
+	export AMBER_setup="~/AMBER_setup"
+
+	example_conf_file=scenario_3_partitions.sh  #scenario_sigmacut.sh
+
+	conf_file_previous_tune=confs_all_integration;
+	conf_file=confs_post_busyday;
+	conf_file_next_tune=scenario_sigmacut;
+}
+alias setup_amber="setup_amber"
+
+setup_amber;
+
+function tune_amber() {
+	amb;
+	./amber.sh tune examples/${conf_file_next_tune}.sh ${INSTALL_ROOT}/${conf_file_next_tune}
+}
+
+function tune_amber_paramset() {
+	amb;
+	pwd;
+	./amber.sh tune examples/$1/${2}.sh ${INSTALL_ROOT}/$2
+}
+
+function test_amber() {
+	amb;
+	./amber.sh test examples/${confs_file}.sh ${INSTALL_ROOT}/${conf_file}
+}
+
+function set_hdr_variable() {
+	hdr=`readfile $file | awk 'FNR>4 {split($0,a,"="); print a[2]}' | awk '{a[NR]=$0} END{printf a[NR-1]}'`
+}
+
+function set_nbatch_variable() {
+	nbatch=`readfile $file | awk 'FNR>4 {split($0,a,"="); print a[2]}' | awk '{a[NR]=$0} END{printf int(a[NR-9])/1.024}'`
+}
+
+function compute_dm_max() {
+	echo print ${SUBBANDING_DM_FIRST}+${SUBBANDING_DM_STEP}*${SUBBANDING_DMS} | python
+}
+
+function tune_w_paramset_25000(){
+	tune_amber_paramset 3_dms_partitions/25000 scenario_3_partitions_step1_25000 &
+	tune_amber_paramset 3_dms_partitions/25000 scenario_3_partitions_step2_25000 &
+	tune_amber_paramset 3_dms_partitions/25000 scenario_3_partitions_step3_25000 &
+	wait;
+}
+
+function tune_w_paramset_12500(){
+	#tune_amber_paramset 3_dms_partitions/12500 scenario_3_partitions_step1_12500 &
+	#tune_amber_paramset 3_dms_partitions/12500 scenario_3_partitions_step2_12500 &
+	tune_amber_paramset 3_dms_partitions/12500 scenario_3_partitions_step3_12500 &
+	wait;
+}
+
+function run_amber() {
+	conf_dir=${INSTALL_ROOT}/$1
+	file=$2
+	out=$3
+	set_hdr_variable;
+	set_nbatch_variable;
+	#hdr=443
+	#hdr=`readfile $file | awk 'FNR>4 {split($0,a,"="); print a[2]}' | awk '{a[NR]=$0} END{printf a[NR-1]}'`
+	#nbatch=`readfile $file | awk 'FNR>4 {split($0,a,"="); print a[2]}' | awk '{a[NR]=$0} END{printf a[NR-9]}'`
+	#nbatch=$4   #1800
+	snrmin=8.0
+
+	time amber -opencl_platform 0 -opencl_device 1 -device_name GenericDevice -sync -print -snr_mom_sigmacut -nsigma 3 -padding_file $conf_dir/padding.conf -zapped_channels $conf_dir/zapped_channels.conf -integration_steps $conf_dir/integration_steps.conf -integration_file $conf_dir/integration.conf -subband_dedispersion -dedispersion_stepone_file $conf_dir/dedispersion_stepone.conf -dedispersion_steptwo_file $conf_dir/dedispersion_steptwo.conf -max_std_file $conf_dir/max_std.conf -mom_stepone_file $conf_dir/mom_stepone.conf -mom_steptwo_file $conf_dir/mom_steptwo.conf -output $out -subbands 32 -dms 32 -dm_first 0 -dm_step 0.2 -subbanding_dms 128 -subbanding_dm_first 5.0 -subbanding_dm_step 6.4 -threshold $snrmin -sigproc -header $hdr -data $file -batches $nbatch -channel_bandwidth .1953125 -min_freq 1250.09765625 -channels 1536 -samples 25000 -sampling_time 4.096e-05 -stream
+}
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+function run_amber_3steps() {
+	file=/data2/output/snr_tests_liam/20190212/dm10.0_nfrb50_409_sec_20190212-1121_gaussian.fil
+	#output=/data2/test_sigmacut_dany/dm10.0_nfrb50_409_sec_20190212-1121_gaussian
+	output=~/backup_results/results/dm10.0_nfrb50_409_sec_20190212-1121_gaussian
+	snrmin=8
+	nsamples=12500
+	set_hdr_variable;
+	set_nbatch_variable;
+
+	subpath=3_dms_partitions/$nsamples
+
+	for i in `seq 1 3`; do
+		scenario_name=scenario_3_partitions_step${i}_$nsamples;
+		source ~/AMBER_setup/examples/${subpath}/${scenario_name}.sh;
+		conf_dir=${INSTALL_ROOT}/${scenario_name};
+
+		taskset -c ${i} amber -opencl_platform ${OPENCL_PLATFORM} -opencl_device ${OPENCL_DEVICE} -device_name ${DEVICE_NAME} -sync -print -snr_mom_sigmacut -padding_file $conf_dir/padding.conf -zapped_channels $conf_dir/zapped_channels.conf -integration_steps $conf_dir/integration_steps.conf -integration_file $conf_dir/integration.conf -subband_dedispersion -dedispersion_stepone_file $conf_dir/dedispersion_stepone.conf -dedispersion_steptwo_file $conf_dir/dedispersion_steptwo.conf -max_std_file ${conf_dir}/max_std.conf -mom_stepone_file ${conf_dir}/mom_stepone.conf -mom_steptwo_file ${conf_dir}/mom_steptwo.conf -output $output.step${i} -subbands ${SUBBANDS} -dms ${DMS} -dm_first ${DM_FIRST} -dm_step ${DM_STEP} -subbanding_dms ${SUBBANDING_DMS} -subbanding_dm_first ${SUBBANDING_DM_FIRST} -subbanding_dm_step ${SUBBANDING_DM_STEP} -threshold $snrmin -sigproc -stream -header $hdr -data $file -batches $nbatch -channel_bandwidth ${CHANNEL_BANDWIDTH} -min_freq ${MIN_FREQ} -channels ${CHANNELS} -samples ${SAMPLES} -sampling_time ${SAMPLING_TIME}  $downsampstuff  $dumpstuff -compact_results &
+		echo;
+	done
+
+	wait;
+	cat ${output}.step*.trigger > ${output}.amber.trigger;
+}
+
+function run_amber_3steps_standard() {
+	file=/data2/output/snr_tests_liam/20190212/dm10.0_nfrb50_409_sec_20190212-1121_gaussian.fil
+	#output=/data2/test_sigmacut_dany/dm10.0_nfrb50_409_sec_20190212-1121_gaussian
+	output=~/backup_results/results/dm10.0_nfrb50_409_sec_20190212-1121_gaussian_standard
+	snrmin=8
+	nsamples=12500
+	set_hdr_variable;
+	set_nbatch_variable;
+
+	subpath=3_dms_partitions/$nsamples
+
+	for i in `seq 1 3`; do
+		scenario_name=scenario_3_partitions_step${i}_$nsamples;
+		source ~/AMBER_setup/examples/${subpath}/${scenario_name}.sh;
+		conf_dir=${INSTALL_ROOT}/${scenario_name};
+
+		taskset -c ${i} amber -opencl_platform ${OPENCL_PLATFORM} -opencl_device ${OPENCL_DEVICE} -device_name ${DEVICE_NAME} -sync -print -snr_standard -padding_file $conf_dir/padding.conf -zapped_channels $conf_dir/zapped_channels.conf -integration_steps $conf_dir/integration_steps.conf -integration_file $conf_dir/integration.conf -subband_dedispersion -dedispersion_stepone_file $conf_dir/dedispersion_stepone.conf -dedispersion_steptwo_file $conf_dir/dedispersion_steptwo.conf -snr_file ${conf_dir}/max_std.conf -mom_stepone_file ${conf_dir}/mom_stepone.conf -mom_steptwo_file ${conf_dir}/mom_steptwo.conf -output $output.step${i} -subbands ${SUBBANDS} -dms ${DMS} -dm_first ${DM_FIRST} -dm_step ${DM_STEP} -subbanding_dms ${SUBBANDING_DMS} -subbanding_dm_first ${SUBBANDING_DM_FIRST} -subbanding_dm_step ${SUBBANDING_DM_STEP} -threshold $snrmin -sigproc -stream -header $hdr -data $file -batches $nbatch -channel_bandwidth ${CHANNEL_BANDWIDTH} -min_freq ${MIN_FREQ} -channels ${CHANNELS} -samples ${SAMPLES} -sampling_time ${SAMPLING_TIME}  $downsampstuff  $dumpstuff -compact_results &
+
+	done
+
+	wait;
+	cat ${output}.step*.trigger > ${output}.amber.trigger;
+}
+
+function run_heimdall_12500() {
+	file=/data2/output/snr_tests_liam/20190212/dm10.0_nfrb50_409_sec_20190212-1121_gaussian.fil
+	snrmin=8
+	output=~/backup_results/results/dm10.0_nfrb50_409_sec_20190212-1121_gaussian
+	nsamples=12500
+	set_hdr_variable;
+	set_nbatch_variable;
+
+	subpath=3_dms_partitions/$nsamples
+
+	for i in `seq 1 3`; do
+		scenario_name=scenario_3_partitions_step${i}_$nsamples;
+		source ~/AMBER_setup/examples/${subpath}/${scenario_name}.sh;
+		conf_dir=${INSTALL_ROOT}/${scenario_name};
+		dm_max=$(compute_dm_max);
+
+		echo ${SUBBANDING_DM_FIRST} $dm_max
+
+		#heimdall -f $file -gpu_id $i -output_dir ${output}/heimdall/step${i}/ -dm ${SUBBANDING_DM_FIRST} $dm_max -rfi_no_narrow -rfi_no_broad &
+	done;
+	#cat ${output}.heimdall.step*.cand > ${output}.heimdall.cand;
+}
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+function 3steps() {
+	for i in `seq 1 3`; do
+		scenario_name=scenario_3_partitions_step${i}_$nsamples;
+		source ~/AMBER_setup/examples/${subpath}/${scenario_name}.sh;
+		conf_dir=${INSTALL_ROOT}/${scenario_name};
+
+		taskset -c ${i} amber -opencl_platform ${OPENCL_PLATFORM} -opencl_device ${OPENCL_DEVICE} -device_name ${DEVICE_NAME} -sync -print -snr_mom_sigmacut -padding_file $conf_dir/padding.conf -zapped_channels $conf_dir/zapped_channels.conf -integration_steps $conf_dir/integration_steps.conf -integration_file $conf_dir/integration.conf -subband_dedispersion -dedispersion_stepone_file $conf_dir/dedispersion_stepone.conf -dedispersion_steptwo_file $conf_dir/dedispersion_steptwo.conf -max_std_file ${conf_dir}/max_std.conf -mom_stepone_file ${conf_dir}/mom_stepone.conf -mom_steptwo_file ${conf_dir}/mom_steptwo.conf -output $output.step${i} -subbands ${SUBBANDS} -dms ${DMS} -dm_first ${DM_FIRST} -dm_step ${DM_STEP} -subbanding_dms ${SUBBANDING_DMS} -subbanding_dm_first ${SUBBANDING_DM_FIRST} -subbanding_dm_step ${SUBBANDING_DM_STEP} -threshold $snrmin -sigproc -stream -header $hdr -data $file -batches $nbatch -channel_bandwidth ${CHANNEL_BANDWIDTH} -min_freq ${MIN_FREQ} -channels ${CHANNELS} -samples ${SAMPLES} -sampling_time ${SAMPLING_TIME}  $downsampstuff  $dumpstuff -compact_results &
+	done
+
+	wait;
+	cat ${output}.step*.trigger > ${output}.amber.trigger;
+}
+
+function 3steps_heimdall() {
+	for i in `seq 1 3`; do
+		scenario_name=scenario_3_partitions_step${i}_$nsamples;
+		source ~/AMBER_setup/examples/${subpath}/${scenario_name}.sh;
+		conf_dir=${INSTALL_ROOT}/${scenario_name};
+		dm_max=$(compute_dm_max);
+
+		heimdall -f $file -gpu_id $i -output_dir ${output}/heimdall/step${i}/ -dm ${SUBBANDING_DM_FIRST} $dm_max -rfi_no_narrow -rfi_no_broad &
+	done;
+}
+
+function multi_files_25000() {
+	path=/data2/output/snr_tests_liam/20190214/
+	snrmin=8
+	nsamples=25000
+	List=(dm100.0_nfrb500_1536_sec_20190214-1542 dm400.0_nfrb500_1536_sec_20190214-1542
+dm10.0_nfrb500_1536_sec_20190214-1542 dm50.0_nfrb500_1536_sec_20190214-1542);
+
+	for filename in ${List[*]}; do
+		echo $filename
+		file=${path}${filename}.fil
+		mkdir ~/backup_results/results/$filename
+		output=~/backup_results/results/$filename/$filename
+		set_hdr_variable;
+		set_nbatch_variable;
+
+		subpath=3_dms_partitions/$nsamples
+		3steps;
+		wait;
+	done;
+}
+
+function multi_files_25000_heimdall() {
+	path=/data2/output/snr_tests_liam/20190214/
+	snrmin=8
+	nsamples=25000
+	List=(dm100.0_nfrb500_1536_sec_20190214-1542 dm400.0_nfrb500_1536_sec_20190214-1542
+dm10.0_nfrb500_1536_sec_20190214-1542 dm50.0_nfrb500_1536_sec_20190214-1542);
+
+	for filename in ${List[*]}; do
+		echo $filename
+		file=${path}${filename}.fil
+		mkdir ~/backup_results/results/$filename
+		mkdir ~/backup_results/results/$filename/heimdall
+		mkdir ~/backup_results/results/$filename/heimdall/step${i}/
+		output=~/backup_results/results/$filename/$filename
+		set_hdr_variable;
+		set_nbatch_variable;
+
+		subpath=3_dms_partitions/$nsamples
+		3steps_heimdall;
+		wait;
+	done;
+}
+
+function run_amber_3steps_25000() {
+	file=/data2/output/snr_tests_liam/20181211/dm250.0_nfrb500_1024_sec_20181211-1000.fil
+	output=~/backup_results/results/dm250.0_nfrb500_1024_sec_20181211-1000/dm250.0_nfrb500_1024_sec_20181211-1000
+	snrmin=8
+	nsamples=25000
+	set_hdr_variable;
+	set_nbatch_variable;
+
+	subpath=3_dms_partitions/$nsamples
+
+	for i in `seq 1 3`; do
+		scenario_name=scenario_3_partitions_step${i}_$nsamples;
+		source ~/AMBER_setup/examples/${subpath}/${scenario_name}.sh;
+		conf_dir=${INSTALL_ROOT}/${scenario_name};
+
+		taskset -c ${i} amber -opencl_platform ${OPENCL_PLATFORM} -opencl_device ${OPENCL_DEVICE} -device_name ${DEVICE_NAME} -sync -print -snr_mom_sigmacut -padding_file $conf_dir/padding.conf -zapped_channels $conf_dir/zapped_channels.conf -integration_steps $conf_dir/integration_steps.conf -integration_file $conf_dir/integration.conf -subband_dedispersion -dedispersion_stepone_file $conf_dir/dedispersion_stepone.conf -dedispersion_steptwo_file $conf_dir/dedispersion_steptwo.conf -max_std_file ${conf_dir}/max_std.conf -mom_stepone_file ${conf_dir}/mom_stepone.conf -mom_steptwo_file ${conf_dir}/mom_steptwo.conf -output $output.step${i} -subbands ${SUBBANDS} -dms ${DMS} -dm_first ${DM_FIRST} -dm_step ${DM_STEP} -subbanding_dms ${SUBBANDING_DMS} -subbanding_dm_first ${SUBBANDING_DM_FIRST} -subbanding_dm_step ${SUBBANDING_DM_STEP} -threshold $snrmin -sigproc -stream -header $hdr -data $file -batches $nbatch -channel_bandwidth ${CHANNEL_BANDWIDTH} -min_freq ${MIN_FREQ} -channels ${CHANNELS} -samples ${SAMPLES} -sampling_time ${SAMPLING_TIME}  $downsampstuff  $dumpstuff -compact_results &
+		echo;
+	done
+
+	wait;
+	cat ${output}.step*.trigger > ${output}.amber.trigger;
+}
+
+function run_amber_3steps_25000_standard() {
+	file=/data2/output/snr_tests_liam/20181211/dm250.0_nfrb500_1024_sec_20181211-1000.fil
+	output=~/backup_results/results/dm250.0_nfrb500_1024_sec_20181211-1000/dm250.0_nfrb500_1024_sec_20181211-1000_standard
+	snrmin=8
+	nsamples=25000
+	set_hdr_variable;
+	set_nbatch_variable;
+
+	subpath=3_dms_partitions/$nsamples
+
+	for i in `seq 1 3`; do
+		scenario_name=scenario_3_partitions_step${i}_$nsamples;
+		source ~/AMBER_setup/examples/${subpath}/${scenario_name}.sh;
+		conf_dir=${INSTALL_ROOT}/${scenario_name};
+
+		taskset -c ${i} amber -opencl_platform ${OPENCL_PLATFORM} -opencl_device ${OPENCL_DEVICE} -device_name ${DEVICE_NAME} -sync -print -snr_standard -padding_file $conf_dir/padding.conf -zapped_channels $conf_dir/zapped_channels.conf -integration_steps $conf_dir/integration_steps.conf -integration_file $conf_dir/integration.conf -subband_dedispersion -dedispersion_stepone_file $conf_dir/dedispersion_stepone.conf -dedispersion_steptwo_file $conf_dir/dedispersion_steptwo.conf -snr_file ${conf_dir}/max_std.conf -mom_stepone_file ${conf_dir}/mom_stepone.conf -mom_steptwo_file ${conf_dir}/mom_steptwo.conf -output $output.step${i} -subbands ${SUBBANDS} -dms ${DMS} -dm_first ${DM_FIRST} -dm_step ${DM_STEP} -subbanding_dms ${SUBBANDING_DMS} -subbanding_dm_first ${SUBBANDING_DM_FIRST} -subbanding_dm_step ${SUBBANDING_DM_STEP} -threshold $snrmin -sigproc -stream -header $hdr -data $file -batches $nbatch -channel_bandwidth ${CHANNEL_BANDWIDTH} -min_freq ${MIN_FREQ} -channels ${CHANNELS} -samples ${SAMPLES} -sampling_time ${SAMPLING_TIME}  $downsampstuff  $dumpstuff -compact_results &
+
+	done
+
+	wait;
+	cat ${output}.step*.trigger > ${output}.amber.trigger;
+}
+
+function run_heimdall_25000() {
+	file=/data2/output/snr_tests_liam/20181211/dm250.0_nfrb500_1024_sec_20181211-1000.fil
+	output=~/backup_results/results/dm250.0_nfrb500_1024_sec_20181211-1000
+	snrmin=8
+	nsamples=25000
+	set_hdr_variable;
+	set_nbatch_variable;
+
+	subpath=3_dms_partitions/$nsamples
+
+	for i in `seq 1 3`; do
+		scenario_name=scenario_3_partitions_step${i}_$nsamples;
+		source ~/AMBER_setup/examples/${subpath}/${scenario_name}.sh;
+		conf_dir=${INSTALL_ROOT}/${scenario_name};
+		dm_max=$(compute_dm_max);
+
+		heimdall -f $file -gpu_id $i -output_dir ${output}/heimdall/step${i}/ -dm ${SUBBANDING_DM_FIRST} $dm_max -rfi_no_narrow -rfi_no_broad &
+	done;
+	#cat ${output}.heimdall.step*.cand > ${output}.heimdall.cand;
+}
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+function run_amber_3steps_25000_old() {
+	file=/data2/output/snr_tests_liam/20181211/dm250.0_nfrb500_1024_sec_20181211-1000.fil
+	output=/data2/test_sigmacut_dany/dm250.0_nfrb500_1024_sec_20181211-1000
+	snrmin=8
+	set_hdr_variable;
+	set_nbatch_variable;
+
+	subpath=3_dms_partitions/25000
+
+	for i in `seq 1 3`; do
+		scenario_name=scenario_3_partitions_step${i}_25000;
+		source ~/AMBER_setup/examples/${subpath}/${scenario_name}.sh;
+		conf_dir=${INSTALL_ROOT}/${scenario_name};
+
+		taskset -c ${i} amber -opencl_platform ${OPENCL_PLATFORM} -opencl_device 0 -device_name ${DEVICE_NAME} -sync -print -snr_mom_sigmacut -padding_file $conf_dir/padding.conf -zapped_channels $conf_dir/zapped_channels.conf -integration_steps $conf_dir/integration_steps.conf -integration_file $conf_dir/integration.conf -subband_dedispersion -dedispersion_stepone_file $conf_dir/dedispersion_stepone.conf -dedispersion_steptwo_file $conf_dir/dedispersion_steptwo.conf -max_std_file ${conf_dir}/max_std.conf -mom_stepone_file ${conf_dir}/mom_stepone.conf -mom_steptwo_file ${conf_dir}/mom_steptwo.conf -output $output.step${i} -subbands ${SUBBANDS} -dms ${DMS} -dm_first ${DM_FIRST} -dm_step ${DM_STEP} -subbanding_dms ${SUBBANDING_DMS} -subbanding_dm_first ${SUBBANDING_DM_FIRST} -subbanding_dm_step ${SUBBANDING_DM_STEP} -threshold $snrmin -sigproc -stream -header $hdr -data $file -batches $nbatch -channel_bandwidth ${CHANNEL_BANDWIDTH} -min_freq ${MIN_FREQ} -channels ${CHANNELS} -samples ${SAMPLES} -sampling_time ${SAMPLING_TIME}  $downsampstuff  $dumpstuff -compact_results &
+
+	done
+
+	wait;
+	cat ${output}.step*.trigger > ${output}.amber.trigger;
+}
+
+function run_heimdall_001() {
+	file=/data2/output/20190130/2019-01-30-02:39:59.RA13DEC60/filterbank/CB00.fil
+	snrmin=8
+	output=~/backup_results/2019-01-30-02:39:59.RA13DEC60
+
+	set_hdr_variable;
+	set_nbatch_variable;
+
+	subpath=3_dms_partitions/12500
+
+	for i in `seq 1 3`; do
+		scenario_name=scenario_3_partitions_step${i}_12500;
+		source ~/AMBER_setup/examples/${subpath}/${scenario_name}.sh;
+		conf_dir=${INSTALL_ROOT}/${scenario_name};
+		dm_max=${DM_FIRST}+${DM_STEP}*${DMS};
+		echo $dm_max;
+
+		#heimdall -f $file -output_dir /home/vohl/backup_results/2019-01-30-02:39:59.RA13DEC60/heimdall/ -dm ${DM_FIRST} $dm_max -f $output.heimdall.step${i};
+	done;
+	#cat ${output}.heimdall.step*.cand > ${output}.heimdall.cand;
+}
+
+function run_amber_3steps_001() {
+	file=/data2/output/20190130/2019-01-30-02:39:59.RA13DEC60/filterbank/CB00.fil
+	snrmin=8
+	output=~/backup_results/2019-01-30-02:39:59.RA13DEC60
+	#nbatch=1000
+	#hdr=443
+	set_hdr_variable;
+	set_nbatch_variable;
+
+	#downsampstuff="-downsampling -downsampling_factor 2 -downsampling_configuration $conf_dir/downsampling.conf"
+	#dumpstuff="-data_dump -dump_prefix ${HOME}/src/ARTS-development/data_dump/leon_100downsampling"
+
+	subpath=3_dms_partitions/12500
+
+	for i in `seq 1 3`; do
+		scenario_name=scenario_3_partitions_step${i}_12500;
+		source ~/AMBER_setup/examples/${subpath}/${scenario_name}.sh;
+		conf_dir=${INSTALL_ROOT}/${scenario_name};
+
+		taskset -c ${i} amber -opencl_platform ${OPENCL_PLATFORM} -opencl_device 0 -device_name ${DEVICE_NAME} -sync -print -snr_mom_sigmacut -padding_file $conf_dir/padding.conf -zapped_channels $conf_dir/zapped_channels.conf -integration_steps $conf_dir/integration_steps.conf -integration_file $conf_dir/integration.conf -subband_dedispersion -dedispersion_stepone_file $conf_dir/dedispersion_stepone.conf -dedispersion_steptwo_file $conf_dir/dedispersion_steptwo.conf -max_std_file ${conf_dir}/max_std.conf -mom_stepone_file ${conf_dir}/mom_stepone.conf -mom_steptwo_file ${conf_dir}/mom_steptwo.conf -output $output.step${i} -subbands ${SUBBANDS} -dms ${DMS} -dm_first ${DM_FIRST} -dm_step ${DM_STEP} -subbanding_dms ${SUBBANDING_DMS} -subbanding_dm_first ${SUBBANDING_DM_FIRST} -subbanding_dm_step ${SUBBANDING_DM_STEP} -threshold $snrmin -sigproc -stream -header $hdr -data $file -batches $nbatch -channel_bandwidth ${CHANNEL_BANDWIDTH} -min_freq ${MIN_FREQ} -channels ${CHANNELS} -samples ${SAMPLES} -sampling_time ${SAMPLING_TIME}  $downsampstuff  $dumpstuff -compact_results &
+	done
+
+	wait;
+	cat ${output}.step*.trigger > ${output}.amber.trigger;
+}
+
+function run_amber_3steps_001_standard() {
+	file=/data2/output/20190130/2019-01-30-02:39:59.RA13DEC60/filterbank/CB00.fil
+	snrmin=8
+	output=~/backup_results/2019-01-30-02:39:59.RA13DEC60/standard
+	#nbatch=1000
+	#hdr=443
+	set_hdr_variable;
+	set_nbatch_variable;
+
+	#downsampstuff="-downsampling -downsampling_factor 2 -downsampling_configuration $conf_dir/downsampling.conf"
+	#dumpstuff="-data_dump -dump_prefix ${HOME}/src/ARTS-development/data_dump/leon_100downsampling"
+
+	subpath=3_dms_partitions/12500
+
+	for i in `seq 1 3`; do
+		scenario_name=scenario_3_partitions_step${i}_12500;
+		source ~/AMBER_setup/examples/${subpath}/${scenario_name}.sh;
+		conf_dir=${INSTALL_ROOT}/${scenario_name};
+
+		taskset -c ${i} amber -opencl_platform ${OPENCL_PLATFORM} -opencl_device 0 -device_name ${DEVICE_NAME} -sync -print -snr_standard -padding_file $conf_dir/padding.conf -zapped_channels $conf_dir/zapped_channels.conf -integration_steps $conf_dir/integration_steps.conf -integration_file $conf_dir/integration.conf -subband_dedispersion -dedispersion_stepone_file $conf_dir/dedispersion_stepone.conf -dedispersion_steptwo_file $conf_dir/dedispersion_steptwo.conf -snr_file ${conf_dir}/max_std.conf -mom_stepone_file ${conf_dir}/mom_stepone.conf -mom_steptwo_file ${conf_dir}/mom_steptwo.conf -output $output.step${i} -subbands ${SUBBANDS} -dms ${DMS} -dm_first ${DM_FIRST} -dm_step ${DM_STEP} -subbanding_dms ${SUBBANDING_DMS} -subbanding_dm_first ${SUBBANDING_DM_FIRST} -subbanding_dm_step ${SUBBANDING_DM_STEP} -threshold $snrmin -sigproc -stream -header $hdr -data $file -batches $nbatch -channel_bandwidth ${CHANNEL_BANDWIDTH} -min_freq ${MIN_FREQ} -channels ${CHANNELS} -samples ${SAMPLES} -sampling_time ${SAMPLING_TIME}  $downsampstuff  $dumpstuff -compact_results &
+	done
+
+	wait;
+	cat ${output}.step*.trigger > ${output}.amber.trigger;
+}
+
+function make_figure() {
+	py_path=/home/vohl/software/arts-analysis
+	fil_file=$1 # ex: /data2/output/20181021/2018-10-21-06:44:59.Virgo/filterbank/CB17.fil
+	trigger_file=$2 # ex: /home/vohl/data/output/gaussian_noise_stdev_longfile.amber.trigger
+	output_dir=$3 # ex: /home/vohl/data/gaussian_noise_stdev_longfile
+
+	if [ ! -d output_dir ]; then
+	    mkdir $3
+	fi
+
+	python $py_path/triggers.py $fil_file $trigger_file --rficlean --dm_min 5 --dm_max 1500 --mk_plot --ndm 1 --ntime_plot 250 --outdir $output_dir concat  --sig_thresh 8. --save_data 0
+}
+
+function eval_algo() {
+	py_path=/home/vohl/software/arts-analysis
+	fil_file=$1 # ex: /data2/output/20181021/2018-10-21-06:44:59.Virgo/filterbank/CB17.fil
+	trigger_file=$2 # ex: /home/vohl/data/output/gaussian_noise_stdev_longfile.amber.trigger
+	output_dir=$3 # ex: /home/vohl/data/gaussian_noise_stdev_longfile
+	figname=$4 # ex: compare_method1_v_method2.pdf
+	title=$5 # ex: "AMBER: [sigma cut] vs [standard]"
+
+	if [ ! -d output_dir ]; then
+	    mkdir $3
+	fi
+
+	python $py_path/tools.py $fil_file $trigger_file --mk_plot --figname $figname --title $title
+}

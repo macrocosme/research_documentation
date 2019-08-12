@@ -3,3 +3,7 @@ ipython-sql
 sqlalchemy
 astropy
 presto
+psrqpy
+pdat
+opencv-python
+opencv-contrib-python

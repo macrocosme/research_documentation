@@ -24,4 +24,4 @@ Acknowledgements
 ----------------
 To use content from this repository for a software development project or for research you intend to publish into a scientific journal, please include the following sentence as part of your acknowledgements: 
 
-`This work made use of algorithm(s) [(!you can specify which part was used!)] implemented and/or designed by Dany Vohl.`
+``This work made use of algorithm(s) [(!you can specify which part was used!)] implemented and/or designed by Dany Vohl.``

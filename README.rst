@@ -22,5 +22,4 @@ the terms of the GNU GPL v3+ license.
 
 Acknowledgements
 ----------------
-To use content from this repository, please include the following sentence to your acknowledgements:
-"This work made use of algorithm(s) [(!you can specify which part was used!)] implemented and/or designed by Dany Vohl."
+To use content from this repository for your research or development project, please include the following sentence as part of your acknowledgements: "This work made use of algorithm(s) [(!you can specify which part was used!)] implemented and/or designed by Dany Vohl."
